@@ -1,0 +1,19 @@
+$kind: http-request
+name: http://127.0.0.1:8000/predict
+description: ""
+url: http://127.0.0.1:8000/predict
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"location\": \"Surabaya\",\r
+
+    \    \"pollutant\": \"PM2.5\",\r
+
+    \    \"scenario\": \"S1\",\r
+
+    \    \"prediction_time\": \"2026-10-07T15:00\"\r
+
+    }"
+order: 1791373986594
