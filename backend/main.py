@@ -3,12 +3,13 @@ import openmeteo_requests
 import requests_cache
 from retry_requests import retry
 import math
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from prediction import predict_pm25_surabaya
 from pydantic import BaseModel
 from datetime import datetime, timedelta
-from prediction import predict_pm25_surabaya
+from prediction import (
+    get_model_config,
+    get_available_predictions,
+    predict_model
+)
 
 
 app = FastAPI(
@@ -55,6 +56,15 @@ locations = {
     }
 }
 
+pollutants = {
+    "PM2.5": "pm2_5",
+    "CO": "carbon_monoxide",
+    "NO2": "nitrogen_dioxide",
+    "SO2": "sulphur_dioxide",
+    "O3": "ozone"
+}
+scenarios = ["S1", "S2"]
+
 @app.get("/")
 def root():
     return {
@@ -66,6 +76,15 @@ def root():
 def health_check():
     return {
         "status": "ok"
+    }
+
+@app.get("/prediction-options")
+def prediction_options():
+    return {
+        "locations": list(locations.keys()),
+        "pollutants": list(pollutants.keys()),
+        "scenarios": scenarios,
+        "available_predictions": get_available_predictions()
     }
 
 def clean_values(values):
@@ -141,46 +160,61 @@ class PredictionRequest(BaseModel):
 @app.post("/predict")
 def predict(request: PredictionRequest):
 
-    if request.location != "Surabaya":
+    if request.location not in locations:
         raise HTTPException(
-            status_code=400,
-            detail="Untuk sementara prediction hanya tersedia untuk Surabaya"
+            status_code=404,
+            detail=f"Location tidak ditemukan. Pilihan: {', '.join(locations)}"
         )
 
-    if request.pollutant != "PM2.5":
+    if request.pollutant not in pollutants:
         raise HTTPException(
             status_code=400,
-            detail="Untuk sementara prediction hanya tersedia untuk PM2.5"
+            detail=f"Pollutant tidak dikenal. Pilihan: {', '.join(pollutants)}"
         )
 
-    if request.scenario != "S1":
+    if request.scenario not in scenarios:
         raise HTTPException(
             status_code=400,
-            detail="Untuk sementara prediction hanya tersedia untuk S1"
+            detail=f"Scenario tidak dikenal. Pilihan: {', '.join(scenarios)}"
         )
 
+    model_config = get_model_config(
+        request.location,
+        request.pollutant,
+        request.scenario
+    )
+    if model_config is None:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Model prediksi belum tersedia untuk kombinasi "
+                f"{request.location}, {request.pollutant}, {request.scenario}. "
+                "Kombinasi yang tersedia: "
+                f"{get_available_predictions()}"
+            )
+        )
+    prediction_time = request.prediction_time
     prediction_time = request.prediction_time
 
-    # 3 jam sebelum waktu prediksi
-    time_lag3 = prediction_time - timedelta(hours=3)
-    time_lag2 = prediction_time - timedelta(hours=2)
-    time_lag1 = prediction_time - timedelta(hours=1)
-
-    # Ambil data dari Open-Meteo
-    latitude = locations["Surabaya"]["latitude"]
-    longitude = locations["Surabaya"]["longitude"]
+    latitude = locations[request.location]["latitude"]
+    longitude = locations[request.location]["longitude"]
+    max_lag = max(lag for _, lag in model_config.features.values())
+    min_lag = min(lag for _, lag in model_config.features.values())
+    time_start = prediction_time - timedelta(hours=max_lag)
+    time_end = prediction_time - timedelta(hours=min_lag)
+    hourly_variables = list(dict.fromkeys(
+        variable for variable, _ in model_config.features.values()
+    ))
 
     url = "https://air-quality-api.open-meteo.com/v1/air-quality"
 
     params = {
         "latitude": latitude,
         "longitude": longitude,
-        "hourly": [
-            "pm2_5"
-        ],
+        "hourly": hourly_variables,
         "timezone": "Asia/Jakarta",
-        "start_hour": time_lag3.strftime("%Y-%m-%dT%H:%M"),
-        "end_hour": time_lag1.strftime("%Y-%m-%dT%H:%M")
+        "start_hour": time_start.strftime("%Y-%m-%dT%H:%M"),
+        "end_hour": time_end.strftime("%Y-%m-%dT%H:%M")
     }
 
     responses = openmeteo.weather_api(
@@ -191,44 +225,42 @@ def predict(request: PredictionRequest):
     response = responses[0]
     hourly = response.Hourly()
 
-    pm25_values = clean_values(
-        hourly.Variables(0).ValuesAsNumpy()
-    )
-
-    if len(pm25_values) < 3:
+    expected_hours = max_lag - min_lag + 1
+    values_by_variable = {
+        variable: clean_values(hourly.Variables(index).ValuesAsNumpy())
+        for index, variable in enumerate(hourly_variables)
+    }
+    if any(len(values) < expected_hours for values in values_by_variable.values()):
         raise HTTPException(
             status_code=500,
-            detail="Data PM2.5 3 jam sebelumnya tidak lengkap"
+            detail="Data polutan untuk waktu prediksi tidak lengkap"
         )
 
-    lag3 = pm25_values[0]
-    lag2 = pm25_values[1]
-    lag1 = pm25_values[2]
-
-    if lag1 is None or lag2 is None or lag3 is None:
+    input_values = {
+        feature: values_by_variable[variable][max_lag - lag]
+        for feature, (variable, lag) in model_config.features.items()
+    }
+    if any(value is None for value in input_values.values()):
         raise HTTPException(
             status_code=500,
-            detail="Terdapat data PM2.5 yang kosong"
+            detail="Terdapat data polutan yang kosong"
         )
 
-    prediction = predict_pm25_surabaya(
-        lag1=lag1,
-        lag2=lag2,
-        lag3=lag3
+    prediction = predict_model(
+        location=request.location,
+        pollutant=request.pollutant,
+        scenario=request.scenario,
+        input_values=input_values
     )
 
     return {
         "status": "success",
-        "location": "Surabaya",
-        "pollutant": "PM2.5",
-        "scenario": "S1",
+        "location": request.location,
+        "pollutant": request.pollutant,
+        "scenario": request.scenario,
         "prediction_time": prediction_time.strftime(
             "%Y-%m-%dT%H:%M"
         ),
-        "input": {
-            "PM2.5_lag1": lag1,
-            "PM2.5_lag2": lag2,
-            "PM2.5_lag3": lag3
-        },
+        "input": input_values,
         "prediction": prediction
     }
