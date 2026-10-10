@@ -1,0 +1,77 @@
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: #eeeeee;
+}
+
+.sidebar {
+  width: 180px;
+  background: #efefef;
+  padding: 30px 14px 24px 18px;
+}
+
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.nav-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #6a6d72;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.nav-item.active {
+  background: rgba(112, 127, 221, 0.1);
+  color: #5A6ACF;
+  font-weight: 600;
+}
+
+.content-panel {
+  flex: 1;
+  background: #f4f4f4;
+  padding: 28px 16px 24px 18px;
+}
+
+.content-panel h1 {
+  margin: 0;
+  color: #2f3237;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    padding: 20px 16px;
+  }
+
+  .content-panel {
+    padding: 20px 16px 40px;
+  }
+
+  .profile-ring {
+    width: 180px;
+    height: 180px;
+  }
+}
