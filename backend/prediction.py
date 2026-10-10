@@ -6,24 +6,70 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 
+LOCATIONS = ("Surabaya", "Pasuruan", "Malang", "Kediri", "Jember")
+POLLUTANT_MODEL_PREFIXES = {
+    "PM2.5": "PM25",
+    "CO": "CO",
+    "NO2": "NO2",
+    "SO2": "SO2",
+    "O3": "O3",
+}
+POLLUTANT_VARIABLES = {
+    "PM2.5": "pm2_5",
+    "CO": "carbon_monoxide",
+    "NO2": "nitrogen_dioxide",
+    "SO2": "sulphur_dioxide",
+    "O3": "ozone",
+}
+METEOROLOGICAL_VARIABLES = {
+    "temperature": "temperature_2m",
+    "humidity": "relative_humidity_2m",
+    "rain": "rain",
+    "pressure": "surface_pressure",
+    "wind_speed": "wind_speed_10m",
+    "wind_direction": "wind_direction_10m",
+}
+SCENARIOS = ("S1", "S2")
+
 
 @dataclass(frozen=True)
 class ModelConfig:
     path: Path
-    # Maps each model input column to an Open-Meteo variable and hour lag.
     features: dict[str, tuple[str, int]]
 
 
-MODEL_REGISTRY = {
-    ("Surabaya", "PM2.5", "S1"): ModelConfig(
-        path=BASE_DIR / "model" / "PM25_Surabaya_S1.joblib",
-        features={
-            "PM2.5_lag1": ("pm2_5", 1),
-            "PM2.5_lag2": ("pm2_5", 2),
-            "PM2.5_lag3": ("pm2_5", 3)
-        }
-    )
-}
+def _build_model_registry():
+    registry = {}
+
+    for location in LOCATIONS:
+        for pollutant, model_prefix in POLLUTANT_MODEL_PREFIXES.items():
+            for scenario in SCENARIOS:
+                pollutant_variable = POLLUTANT_VARIABLES[pollutant]
+                features = {
+                    f"{pollutant}_lag{lag}": (pollutant_variable, lag)
+                    for lag in range(1, 4)
+                }
+
+                if scenario == "S2":
+                    features.update({
+                        f"{name}_lag{lag}": (variable, lag)
+                        for name, variable in METEOROLOGICAL_VARIABLES.items()
+                        for lag in range(1, 4)
+                    })
+
+                registry[(location, pollutant, scenario)] = ModelConfig(
+                    path=(
+                        BASE_DIR
+                        / "model"
+                        / f"{model_prefix}_{location}_{scenario}.joblib"
+                    ),
+                    features=features,
+                )
+
+    return registry
+
+
+MODEL_REGISTRY = _build_model_registry()
 
 
 def get_available_predictions():

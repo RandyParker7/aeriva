@@ -5,10 +5,14 @@ from retry_requests import retry
 import math
 from pydantic import BaseModel
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from prediction import (
     get_model_config,
     get_available_predictions,
-    predict_model
+    predict_model,
+    POLLUTANT_VARIABLES as pollutants,
+    METEOROLOGICAL_VARIABLES,
+    SCENARIOS as scenarios,
 )
 
 
@@ -55,15 +59,6 @@ locations = {
         "longitude": 113.701550796421
     }
 }
-
-pollutants = {
-    "PM2.5": "pm2_5",
-    "CO": "carbon_monoxide",
-    "NO2": "nitrogen_dioxide",
-    "SO2": "sulphur_dioxide",
-    "O3": "ozone"
-}
-scenarios = ["S1", "S2"]
 
 @app.get("/")
 def root():
@@ -157,7 +152,7 @@ class PredictionRequest(BaseModel):
 
 
 
-@app.post("/predict")
+@app.post("/prediction")
 def predict(request: PredictionRequest):
 
     if request.location not in locations:
@@ -193,57 +188,129 @@ def predict(request: PredictionRequest):
                 f"{get_available_predictions()}"
             )
         )
+    jakarta_timezone = ZoneInfo("Asia/Jakarta")
     prediction_time = request.prediction_time
-    prediction_time = request.prediction_time
+    if prediction_time.tzinfo is None:
+        prediction_time = prediction_time.replace(tzinfo=jakarta_timezone)
+    else:
+        prediction_time = prediction_time.astimezone(jakarta_timezone)
 
     latitude = locations[request.location]["latitude"]
     longitude = locations[request.location]["longitude"]
-    max_lag = max(lag for _, lag in model_config.features.values())
-    min_lag = min(lag for _, lag in model_config.features.values())
-    time_start = prediction_time - timedelta(hours=max_lag)
-    time_end = prediction_time - timedelta(hours=min_lag)
-    hourly_variables = list(dict.fromkeys(
-        variable for variable, _ in model_config.features.values()
-    ))
-
-    url = "https://air-quality-api.open-meteo.com/v1/air-quality"
-
-    params = {
-        "latitude": latitude,
-        "longitude": longitude,
-        "hourly": hourly_variables,
-        "timezone": "Asia/Jakarta",
-        "start_hour": time_start.strftime("%Y-%m-%dT%H:%M"),
-        "end_hour": time_end.strftime("%Y-%m-%dT%H:%M")
+    feature_values = {}
+    pollutant_variable_names = set(pollutants.values())
+    pollutant_features = {
+        feature: (variable, lag)
+        for feature, (variable, lag) in model_config.features.items()
+        if variable in pollutant_variable_names
+    }
+    weather_features = {
+        feature: (variable, lag)
+        for feature, (variable, lag) in model_config.features.items()
+        if variable in METEOROLOGICAL_VARIABLES.values()
     }
 
-    responses = openmeteo.weather_api(
-        url,
-        params=params
-    )
-
-    response = responses[0]
-    hourly = response.Hourly()
-
-    expected_hours = max_lag - min_lag + 1
-    values_by_variable = {
-        variable: clean_values(hourly.Variables(index).ValuesAsNumpy())
-        for index, variable in enumerate(hourly_variables)
-    }
-    if any(len(values) < expected_hours for values in values_by_variable.values()):
-        raise HTTPException(
-            status_code=500,
-            detail="Data polutan untuk waktu prediksi tidak lengkap"
+    if pollutant_features:
+        pollutant_lags = [lag for _, lag in pollutant_features.values()]
+        max_pollutant_lag = max(pollutant_lags)
+        min_pollutant_lag = min(pollutant_lags)
+        time_start = prediction_time - timedelta(hours=max_pollutant_lag)
+        time_end = prediction_time - timedelta(hours=min_pollutant_lag)
+        pollutant_variables = list(dict.fromkeys(
+            variable for variable, _ in pollutant_features.values()
+        ))
+        pollutant_url = (
+            "https://air-quality-api.open-meteo.com/v1/air-quality"
         )
+        pollutant_params = {
+            "latitude": latitude,
+            "longitude": longitude,
+            "hourly": pollutant_variables,
+            "timezone": "Asia/Jakarta",
+            "start_hour": time_start.strftime("%Y-%m-%dT%H:%M"),
+            "end_hour": time_end.strftime("%Y-%m-%dT%H:%M")
+        }
+        pollutant_response = openmeteo.weather_api(
+            pollutant_url,
+            params=pollutant_params
+        )[0]
+        pollutant_hourly = pollutant_response.Hourly()
+        pollutant_values = {
+            variable: clean_values(
+                pollutant_hourly.Variables(index).ValuesAsNumpy()
+            )
+            for index, variable in enumerate(pollutant_variables)
+        }
+        expected_pollutant_hours = (
+            max_pollutant_lag - min_pollutant_lag + 1
+        )
+        if any(
+            len(values) < expected_pollutant_hours
+            for values in pollutant_values.values()
+        ):
+            raise HTTPException(
+                status_code=500,
+                detail="Data polutan untuk waktu prediksi tidak lengkap"
+            )
+
+        feature_values.update({
+            feature: pollutant_values[variable][max_pollutant_lag - lag]
+            for feature, (variable, lag) in pollutant_features.items()
+        })
+
+    if weather_features:
+        weather_lags = [lag for _, lag in weather_features.values()]
+        weather_start = prediction_time - timedelta(hours=max(weather_lags))
+        weather_end = prediction_time - timedelta(hours=min(weather_lags))
+        weather_variables = list(dict.fromkeys(
+            variable for variable, _ in weather_features.values()
+        ))
+        weather_url = "https://archive-api.open-meteo.com/v1/archive?latitude=52.52&longitude=13.41&start_date=2026-09-24&end_date=2026-10-08&hourly=temperature_2m,relative_humidity_2m,rain,surface_pressure,wind_speed_10m,wind_direction_10m"
+        weather_params = {
+            "latitude": latitude,
+            "longitude": longitude,
+            "hourly": weather_variables,
+            "timezone": "Asia/Jakarta",
+            "start_date": weather_start.strftime("%Y-%m-%d"),
+            "end_date": weather_end.strftime("%Y-%m-%d")
+        }
+        weather_response = openmeteo.weather_api(
+            weather_url,
+            params=weather_params
+        )[0]
+        weather_hourly = weather_response.Hourly()
+        weather_values = {
+            variable: clean_values(
+                weather_hourly.Variables(index).ValuesAsNumpy()
+            )
+            for index, variable in enumerate(weather_variables)
+        }
+        weather_start_date = weather_start.date()
+        weather_feature_values = {}
+        for feature, (variable, lag) in weather_features.items():
+            feature_time = prediction_time - timedelta(hours=lag)
+            hour_index = (
+                (feature_time.date() - weather_start_date).days * 24
+                + feature_time.hour
+            )
+            variable_values = weather_values[variable]
+            if hour_index >= len(variable_values):
+                raise HTTPException(
+                    status_code=500,
+                    detail="Data meteorologi untuk waktu prediksi tidak lengkap"
+                )
+            weather_feature_values[feature] = variable_values[hour_index]
+
+        feature_values.update(weather_feature_values)
 
     input_values = {
-        feature: values_by_variable[variable][max_lag - lag]
-        for feature, (variable, lag) in model_config.features.items()
+        feature: feature_values[feature]
+        for feature in model_config.features
     }
     if any(value is None for value in input_values.values()):
         raise HTTPException(
             status_code=500,
-            detail="Terdapat data polutan yang kosong"
+            detail="Terdapat data polutan atau meteorologi yang kosong"
         )
 
     prediction = predict_model(
