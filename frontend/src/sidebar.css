@@ -6,23 +6,55 @@
 }
 
 .sidebar {
+  display: flex;
+  flex-direction: column;
   width: 180px;
-  background: #efefef;
-  padding: 30px 14px 24px 18px;
+  background: #F1F2F7;
+  padding: 24px 14px 24px 20px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  color: #273240;
+  text-decoration: none;
+}
+
+.brand-logo {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  background: #707FDD;
+}
+
+.brand-logo svg {
+  width: 21px;
+  height: 21px;
+  fill: #ffffff;
+}
+
+.brand-name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
 }
 
 .nav-menu {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 18px;
+  margin-top: 36px;
 }
 
 .nav-item {
   width: 100%;
   border: none;
   background: transparent;
-  color: #6a6d72;
+  color: #273240;
   font-size: 14px;
   font-weight: 500;
   text-align: left;
