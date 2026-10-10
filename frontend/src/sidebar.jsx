@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import './layout.css'
 import './sidebar.css'
 import PredictionPage from './pages/PredictionPage'
 import EvaluationPage from './pages/EvaluationPage'

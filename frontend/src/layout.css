@@ -1,0 +1,30 @@
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: #eeeeee;
+}
+
+.content-panel {
+  flex: 1;
+  background: #f4f4f4;
+  padding: 28px 16px 24px 18px;
+}
+
+.content-panel h1 {
+  margin: 0;
+  color: #2f3237;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .content-panel {
+    padding: 20px 16px 40px;
+  }
+}
