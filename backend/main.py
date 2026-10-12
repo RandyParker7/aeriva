@@ -77,6 +77,7 @@ def health_check():
 def prediction_options():
     return {
         "locations": list(locations.keys()),
+        "location_coordinates": locations,
         "pollutants": list(pollutants.keys()),
         "scenarios": scenarios,
         "available_predictions": get_available_predictions()
@@ -144,13 +145,71 @@ def get_pollution(location: str):
     }
 }
 
+@app.get("/current-conditions")
+def get_current_conditions(location: str):
+    if location not in locations:
+        raise HTTPException(
+            status_code=404,
+            detail="Location not found"
+        )
+
+    latitude = locations[location]["latitude"]
+    longitude = locations[location]["longitude"]
+    timezone = "Asia/Jakarta"
+
+    pollutant_variables = list(pollutants.values())
+    pollutant_response = openmeteo.weather_api(
+        "https://air-quality-api.open-meteo.com/v1/air-quality",
+        params={
+            "latitude": latitude,
+            "longitude": longitude,
+            "current": pollutant_variables,
+            "timezone": timezone
+        }
+    )[0]
+    weather_variables = list(METEOROLOGICAL_VARIABLES.values())
+    weather_response = openmeteo.weather_api(
+        "https://api.open-meteo.com/v1/forecast",
+        params={
+            "latitude": latitude,
+            "longitude": longitude,
+            "current": weather_variables,
+            "timezone": timezone
+        }
+    )[0]
+
+    pollutant_current = pollutant_response.Current()
+    weather_current = weather_response.Current()
+    current_time = datetime.fromtimestamp(
+        weather_current.Time(),
+        tz=ZoneInfo(timezone)
+    ).strftime("%Y-%m-%dT%H:%M")
+    values = {
+        variable: clean_values([
+            pollutant_current.Variables(index).Value()
+        ])[0]
+        for index, variable in enumerate(pollutant_variables)
+    }
+    values.update({
+        variable: clean_values([
+            weather_current.Variables(index).Value()
+        ])[0]
+        for index, variable in enumerate(weather_variables)
+    })
+
+    return {
+        "location": location,
+        "latitude": latitude,
+        "longitude": longitude,
+        "updated_at": current_time,
+        "values": values
+    }
+
 class PredictionRequest(BaseModel):
     location: str
     pollutant: str
     scenario: str
     prediction_time: datetime
-
-
 
 @app.post("/prediction")
 def predict(request: PredictionRequest):
