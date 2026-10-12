@@ -323,11 +323,19 @@ def predict(request: PredictionRequest):
     return {
         "status": "success",
         "location": request.location,
+        "latitude": latitude,
+        "longitude": longitude,
         "pollutant": request.pollutant,
         "scenario": request.scenario,
         "prediction_time": prediction_time.strftime(
             "%Y-%m-%dT%H:%M"
         ),
+        "previous_hour_pollutant": {
+            "time": (prediction_time - timedelta(hours=1)).strftime(
+                "%Y-%m-%dT%H:%M"
+            ),
+            "value": input_values[f"{request.pollutant}_lag1"],
+        },
         "input": input_values,
         "prediction": prediction
     }
