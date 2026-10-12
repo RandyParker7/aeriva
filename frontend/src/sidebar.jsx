@@ -22,20 +22,43 @@ const pageMap = {
 
 function App() {
   const [activeMenu, setActiveMenu] = useState('prediction')
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const ActivePage = pageMap[activeMenu] || AboutPage
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isSidebarOpen ? '' : 'sidebar-closed'}`}>
       <aside className="sidebar">
-        <a className="brand" href="/" aria-label="Aeriva home">
-          <span className="brand-logo" aria-hidden="true">
-            <svg viewBox="0 0 32 32" focusable="false">
-              <path d="M16 4 28 26h-7l-5-9-5 9H4L16 4Z" />
-              <path d="M13.2 20h5.6l-2.8-5.1-2.8 5.1Z" />
-            </svg>
-          </span>
-          <span className="brand-name">Aeriva</span>
-        </a>
+        <div className="sidebar-header">
+          <a className="brand" href="/" aria-label="Aeriva home">
+            <span className="brand-logo" aria-hidden="true">
+              <svg viewBox="0 0 32 32" focusable="false">
+                <path d="M16 4 28 26h-7l-5-9-5 9H4L16 4Z" />
+                <path d="M13.2 20h5.6l-2.8-5.1-2.8 5.1Z" />
+              </svg>
+            </span>
+            <span className="brand-name">Aeriva</span>
+          </a>
+          <button
+            className={`sidebar-toggle ${isSidebarOpen ? '' : 'sidebar-reopen'}`}
+            type="button"
+            aria-label={isSidebarOpen ? 'Tutup sidebar' : 'Buka sidebar'}
+            title={isSidebarOpen ? 'Tutup sidebar' : 'Buka sidebar'}
+            aria-expanded={isSidebarOpen}
+            onClick={() => setIsSidebarOpen((open) => !open)}
+          >
+            {isSidebarOpen ? (
+              <span aria-hidden="true">›</span>
+            ) : (
+              <svg
+                className="sidebar-menu-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
+        </div>
 
         <nav className="nav-menu" aria-label="Sidebar navigation">
           {menuItems.map((item) => (
