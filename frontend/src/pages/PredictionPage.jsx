@@ -139,8 +139,8 @@ function PredictionPage() {
         map = new leaflet.Map(conditionsMapRef.current, {
           center,
           zoom: 7,
-          scrollWheelZoom: false,
-          doubleClickZoom: false,
+          scrollWheelZoom: true,
+          doubleClickZoom: true,
         })
         new leaflet.TileLayer(
           'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -330,11 +330,7 @@ function PredictionPage() {
                   id="prediction-location"
                   required
                   value={location}
-                  onChange={(event) => {
-                    setCurrentConditions(null)
-                    setCurrentConditionsError('')
-                    setLocation(event.target.value)
-                  }}
+                  onChange={(event) => setLocation(event.target.value)}
                 >
                   <option value="">Pilih kota</option>
                   {options?.locations?.map((city) => (
@@ -434,9 +430,14 @@ function PredictionPage() {
                   <strong>
                     {predictionResult.previous_hour_pollutant.value}
                   </strong>
-                  <p className="prediction-result-meta">
-                    {predictionResult.previous_hour_pollutant.time}
-                  </p>
+                  <div className="prediction-result-datetime">
+                    <span className="prediction-result-date">
+                      {predictionResult.previous_hour_pollutant.time.split('T')[0]}
+                    </span>
+                    <strong className="prediction-result-time">
+                      {predictionResult.previous_hour_pollutant.time.split('T')[1]}
+                    </strong>
+                  </div>
                   <p>
                     Koordinat: {Number(predictionResult.latitude).toFixed(5)},{' '}
                     {Number(predictionResult.longitude).toFixed(5)}
@@ -447,10 +448,17 @@ function PredictionPage() {
                   <p>
                     <strong>{predictionResult.prediction}</strong>
                   </p>
+                  <div className="prediction-result-datetime">
+                    <span className="prediction-result-date">
+                      {predictionResult.prediction_time.split('T')[0]}
+                    </span>
+                    <strong className="prediction-result-time">
+                      {predictionResult.prediction_time.split('T')[1]}
+                    </strong>
+                  </div>
                   <p>
                     {predictionResult.location} · {predictionResult.pollutant} ·
-                    {' '}{predictionResult.scenario} ·{' '}
-                    {predictionResult.prediction_time}
+                    {' '}{predictionResult.scenario}
                   </p>
                   <p>
                     Koordinat: {Number(predictionResult.latitude).toFixed(5)},{' '}
