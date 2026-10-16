@@ -92,6 +92,10 @@ def get_model_config(location, pollutant, scenario):
 
 
 def predict_model(location, pollutant, scenario, input_values):
+    return predict_models(location, pollutant, scenario, [input_values])[0]
+
+
+def predict_models(location, pollutant, scenario, input_rows):
     config = get_model_config(location, pollutant, scenario)
 
     if config is None:
@@ -104,9 +108,7 @@ def predict_model(location, pollutant, scenario, input_values):
             f"Model tidak ditemukan: {config.path}"
         )
 
-    X_input = pd.DataFrame([input_values], columns=config.features)
+    X_input = pd.DataFrame(input_rows, columns=config.features)
     model = joblib.load(config.path)
 
-    prediction = model.predict(X_input)[0]
-
-    return float(prediction)
+    return [float(prediction) for prediction in model.predict(X_input)]

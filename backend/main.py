@@ -14,6 +14,7 @@ from prediction import (
     METEOROLOGICAL_VARIABLES,
     SCENARIOS as scenarios,
 )
+from evaluation import create_evaluation_router
 
 
 app = FastAPI(
@@ -398,3 +399,12 @@ def predict(request: PredictionRequest):
         "input": input_values,
         "prediction": prediction
     }
+
+
+app.include_router(create_evaluation_router(
+    openmeteo=openmeteo,
+    locations=locations,
+    pollutants=pollutants,
+    meteorological_variables=METEOROLOGICAL_VARIABLES,
+    scenarios=scenarios
+))
