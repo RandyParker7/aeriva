@@ -14,6 +14,81 @@ const scenarios = [
   },
 ]
 
+const shapFeatureLabels = {
+  temperature: 'Suhu',
+  humidity: 'Kelembapan',
+  rain: 'Curah hujan',
+  pressure: 'Tekanan udara',
+  wind_speed: 'Kecepatan angin',
+  wind_direction: 'Arah angin',
+}
+
+function formatShapFeature(feature) {
+  const match = feature.match(/^(.*)_lag(\d+)$/)
+  if (!match) {
+    return feature
+  }
+
+  return `${shapFeatureLabels[match[1]] || match[1]} · lag ${match[2]}`
+}
+
+function ShapInterpretation({ interpretation, scenario }) {
+  const maxImpact = Math.max(
+    ...interpretation.features.map((feature) => Math.abs(feature.shap_value)),
+  )
+
+  return (
+    <section className="prediction-shap" aria-labelledby="prediction-shap-title">
+      <div className="prediction-shap-heading">
+        <div>
+          <h2 id="prediction-shap-title">Interpretasi model (SHAP)</h2>
+          <p>
+            Variabel diurutkan dari pengaruh terbesar pada prediksi {scenario}.
+            {' '}Nilai positif menaikkan prediksi, nilai negatif menurunkannya.
+          </p>
+        </div>
+        <span className="prediction-shap-baseline">
+          Baseline {Number(interpretation.base_value).toFixed(2)}
+        </span>
+      </div>
+      <ol className="prediction-shap-list">
+        {interpretation.features.map((feature) => {
+          const magnitude = Math.abs(feature.shap_value)
+          const barWidth = maxImpact
+            ? `${(magnitude / maxImpact) * 100}%`
+            : '0%'
+          const direction = feature.impact === 'positive'
+            ? 'Menaikkan'
+            : feature.impact === 'negative'
+              ? 'Menurunkan'
+              : 'Netral'
+
+          return (
+            <li className="prediction-shap-item" key={feature.feature}>
+              <div className="prediction-shap-item-heading">
+                <span className="prediction-shap-feature">
+                  {formatShapFeature(feature.feature)}
+                  <span>Nilai input {Number(feature.value).toFixed(2)}</span>
+                </span>
+                <span className={`prediction-shap-impact ${feature.impact}`}>
+                  {direction} · {feature.shap_value > 0 ? '+' : ''}
+                  {Number(feature.shap_value).toFixed(3)}
+                </span>
+              </div>
+              <div className="prediction-shap-track" aria-hidden="true">
+                <span
+                  className={`prediction-shap-bar ${feature.impact}`}
+                  style={{ width: barWidth }}
+                />
+              </div>
+            </li>
+          )
+        })}
+      </ol>
+    </section>
+  )
+}
+
 function PredictionPage() {
   const [selectedScenario, setSelectedScenario] = useState('')
   const [predictionDate, setPredictionDate] = useState('')
@@ -49,12 +124,10 @@ function PredictionPage() {
         }
 
         setOptions(data)
-        if (data.locations?.length) {
-          setLocation((currentLocation) => currentLocation || data.locations[0])
-          setConditionsLocation(
-            (currentLocation) => currentLocation || data.locations[0],
-          )
-        }
+        setConditionsLocation(
+          (currentLocation) => currentLocation || data.locations?.[0] || ''
+        )
+
       } catch (error) {
         if (error.name !== 'AbortError') {
           setOptionsError(error.message)
@@ -139,8 +212,8 @@ function PredictionPage() {
         map = new leaflet.Map(conditionsMapRef.current, {
           center,
           zoom: 7,
-          scrollWheelZoom: true,
-          doubleClickZoom: true,
+          scrollWheelZoom: false,
+          doubleClickZoom: false,
         })
         new leaflet.TileLayer(
           'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -465,6 +538,10 @@ function PredictionPage() {
                     {Number(predictionResult.longitude).toFixed(5)}
                   </p>
                 </section>
+                <ShapInterpretation
+                  interpretation={predictionResult.interpretation}
+                  scenario={predictionResult.scenario}
+                />
               </div>
             )}
         </form>

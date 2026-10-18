@@ -390,6 +390,124 @@
   line-height: 1.6;
 }
 
+.prediction-shap {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #e1e5eb;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.prediction-shap-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.prediction-shap-heading h2 {
+  color: #273240;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.prediction-shap-heading p {
+  margin-top: 6px;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.prediction-shap-baseline {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: #f5f6f8;
+  color: #596579;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.prediction-shap-list {
+  display: grid;
+  gap: 13px;
+  margin-top: 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.prediction-shap-item {
+  min-width: 0;
+}
+
+.prediction-shap-item-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 6px;
+}
+
+.prediction-shap-feature {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+  color: #344054;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.prediction-shap-feature > span {
+  color: #87909e;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.prediction-shap-impact {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.prediction-shap-impact.positive {
+  color: #986341;
+}
+
+.prediction-shap-impact.negative {
+  color: #587a69;
+}
+
+.prediction-shap-impact.neutral {
+  color: #7a8492;
+}
+
+.prediction-shap-track {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f0f2f5;
+}
+
+.prediction-shap-bar {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.prediction-shap-bar.positive {
+  background: #b27c55;
+}
+
+.prediction-shap-bar.negative {
+  background: #6d9180;
+}
+
+.prediction-shap-bar.neutral {
+  background: #aab2bd;
+}
+
 .current-conditions {
   grid-area: monitoring;
   min-width: 0;
@@ -756,6 +874,19 @@
   .scenario-option {
     min-height: 64px;
     padding: 10px 12px;
+  }
+
+  .prediction-shap {
+    padding: 16px;
+  }
+
+  .prediction-shap-heading {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .prediction-shap-item-heading {
+    align-items: flex-start;
   }
 
   .prediction-hour {
