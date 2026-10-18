@@ -95,6 +95,29 @@ def predict_model(location, pollutant, scenario, input_values):
     return predict_models(location, pollutant, scenario, [input_values])[0]
 
 
+def predict_model_with_explanation(location, pollutant, scenario, input_values):
+    config = get_model_config(location, pollutant, scenario)
+
+    if config is None:
+        raise ValueError(
+            f"Model belum tersedia untuk {location}, {pollutant}, {scenario}"
+        )
+
+    if not config.path.exists():
+        raise FileNotFoundError(
+            f"Model tidak ditemukan: {config.path}"
+        )
+
+    X_input = pd.DataFrame([input_values], columns=config.features)
+    model = joblib.load(config.path)
+    prediction = float(model.predict(X_input)[0])
+
+    from shap_explainer import explain_prediction
+
+    interpretation = explain_prediction(model, X_input)
+    return prediction, interpretation
+
+
 def predict_models(location, pollutant, scenario, input_rows):
     config = get_model_config(location, pollutant, scenario)
 

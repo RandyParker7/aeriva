@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 from prediction import (
     get_model_config,
     get_available_predictions,
-    predict_model,
+    predict_model_with_explanation,
     POLLUTANT_VARIABLES as pollutants,
     METEOROLOGICAL_VARIABLES,
     SCENARIOS as scenarios,
@@ -276,6 +276,17 @@ def predict(request: PredictionRequest):
         min_pollutant_lag = min(pollutant_lags)
         time_start = prediction_time - timedelta(hours=max_pollutant_lag)
         time_end = prediction_time - timedelta(hours=min_pollutant_lag)
+        latest_supported_date = (
+            datetime.now(jakarta_timezone).date() + timedelta(days=5)
+        )
+        if time_end.date() > latest_supported_date:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Data polutan untuk prediksi hanya tersedia hingga "
+                    f"{latest_supported_date.isoformat()}"
+                )
+            )
         pollutant_variables = list(dict.fromkeys(
             variable for variable, _ in pollutant_features.values()
         ))
@@ -325,15 +336,36 @@ def predict(request: PredictionRequest):
         weather_variables = list(dict.fromkeys(
             variable for variable, _ in weather_features.values()
         ))
-        weather_url = "https://archive-api.open-meteo.com/v1/archive?latitude=52.52&longitude=13.41&start_date=2026-09-24&end_date=2026-10-08&hourly=temperature_2m,relative_humidity_2m,rain,surface_pressure,wind_speed_10m,wind_direction_10m"
         weather_params = {
             "latitude": latitude,
             "longitude": longitude,
             "hourly": weather_variables,
             "timezone": "Asia/Jakarta",
-            "start_date": weather_start.strftime("%Y-%m-%d"),
-            "end_date": weather_end.strftime("%Y-%m-%d")
         }
+        today = datetime.now(jakarta_timezone).date()
+        if weather_end.date() < today:
+            weather_url = "https://archive-api.open-meteo.com/v1/archive"
+            weather_params.update({
+                "start_date": weather_start.strftime("%Y-%m-%d"),
+                "end_date": weather_end.strftime("%Y-%m-%d"),
+            })
+        else:
+            forecast_days = (weather_end.date() - today).days + 1
+            if forecast_days > 16:
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        "Data meteorologi untuk prediksi hanya tersedia "
+                        "hingga 16 hari ke depan"
+                    )
+                )
+
+            weather_url = "https://api.open-meteo.com/v1/forecast"
+            weather_params["forecast_days"] = forecast_days
+            past_days = (today - weather_start.date()).days
+            if past_days > 0:
+                weather_params["past_days"] = past_days
+
         weather_response = openmeteo.weather_api(
             weather_url,
             params=weather_params
@@ -345,16 +377,18 @@ def predict(request: PredictionRequest):
             )
             for index, variable in enumerate(weather_variables)
         }
-        weather_start_date = weather_start.date()
+        weather_series_start = datetime.fromtimestamp(
+            weather_hourly.Time(),
+            tz=jakarta_timezone
+        )
         weather_feature_values = {}
         for feature, (variable, lag) in weather_features.items():
             feature_time = prediction_time - timedelta(hours=lag)
-            hour_index = (
-                (feature_time.date() - weather_start_date).days * 24
-                + feature_time.hour
+            hour_index = int(
+                (feature_time - weather_series_start).total_seconds() // 3600
             )
             variable_values = weather_values[variable]
-            if hour_index >= len(variable_values):
+            if hour_index < 0 or hour_index >= len(variable_values):
                 raise HTTPException(
                     status_code=500,
                     detail="Data meteorologi untuk waktu prediksi tidak lengkap"
@@ -367,13 +401,21 @@ def predict(request: PredictionRequest):
         feature: feature_values[feature]
         for feature in model_config.features
     }
-    if any(value is None for value in input_values.values()):
+    missing_features = [
+        feature
+        for feature, value in input_values.items()
+        if value is None
+    ]
+    if missing_features:
         raise HTTPException(
-            status_code=500,
-            detail="Terdapat data polutan atau meteorologi yang kosong"
+            status_code=400,
+            detail=(
+                "Data tidak tersedia untuk fitur "
+                f"{', '.join(missing_features)} pada waktu prediksi ini"
+            )
         )
 
-    prediction = predict_model(
+    prediction, interpretation = predict_model_with_explanation(
         location=request.location,
         pollutant=request.pollutant,
         scenario=request.scenario,
@@ -397,6 +439,7 @@ def predict(request: PredictionRequest):
             "value": input_values[f"{request.pollutant}_lag1"],
         },
         "input": input_values,
+        "interpretation": interpretation,
         "prediction": prediction
     }
 
