@@ -1,0 +1,511 @@
+.information-page {
+  width: 100%;
+  max-width: 1440px;
+}
+
+.information-page-header {
+  margin-bottom: 26px;
+}
+
+.information-page-header h1 {
+  color: #2f3237;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.information-page-header > p {
+  max-width: 700px;
+  margin-top: 7px;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.information-opening {
+  position: relative;
+  display: flex;
+  min-height: 245px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  overflow: hidden;
+  margin-top: 18px;
+  padding: 28px 38px;
+  border: 1px solid #dfe4f5;
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse at 88% 20%, rgba(151, 163, 239, 0.19), transparent 33%),
+    linear-gradient(112deg, #f1f3ff 0%, #f8f9ff 48%, #ffffff 100%);
+}
+
+.information-opening-content {
+  position: relative;
+  z-index: 1;
+  max-width: 700px;
+}
+
+.information-opening-badge {
+  display: inline-flex;
+  min-height: 29px;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 7px;
+  border: 1px solid rgba(90, 106, 207, 0.16);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.76);
+  color: #5262c4;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.information-opening-badge .information-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.information-opening-content h2 {
+  margin-top: 12px;
+  color: #273240;
+  font-size: clamp(25px, 3vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1.15;
+}
+
+.information-opening-content h2 span {
+  color: #5a6acf;
+}
+
+.information-opening-content > p {
+  max-width: 620px;
+  margin-top: 9px;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.information-opening-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 17px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.information-opening-highlights li {
+  display: flex;
+  min-width: 92px;
+  align-items: baseline;
+  gap: 6px;
+  padding: 7px 11px;
+  border: 1px solid rgba(222, 226, 242, 0.9);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.information-opening-highlights strong {
+  color: #4657b5;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.information-opening-highlights span {
+  color: #737d8f;
+  font-size: 11px;
+  font-weight: 550;
+}
+
+.information-opening-visual {
+  position: relative;
+  display: grid;
+  width: 210px;
+  height: 190px;
+  flex: 0 0 210px;
+  place-items: center;
+  margin-right: 8px;
+}
+
+.information-opening-orbit {
+  position: absolute;
+  border: 1px solid rgba(112, 127, 221, 0.2);
+  border-radius: 50%;
+}
+
+.information-opening-orbit-outer {
+  width: 180px;
+  height: 180px;
+}
+
+.information-opening-orbit-inner {
+  width: 132px;
+  height: 132px;
+  border-color: rgba(112, 127, 221, 0.26);
+}
+
+.information-opening-logo {
+  position: relative;
+  display: grid;
+  width: 76px;
+  height: 76px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 24px;
+  background: linear-gradient(145deg, #8290e8, #596bc9);
+  box-shadow: 0 12px 28px rgba(80, 96, 191, 0.25);
+  color: #ffffff;
+  transform: rotate(-6deg);
+}
+
+.information-brand-mark {
+  display: block;
+  width: 43px;
+  height: 43px;
+  fill: currentColor;
+}
+
+.information-opening-dot {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #8290e8;
+  box-shadow: 0 2px 8px rgba(80, 96, 191, 0.16);
+}
+
+.information-opening-dot-one {
+  top: 19px;
+  right: 48px;
+}
+
+.information-opening-dot-two {
+  bottom: 31px;
+  left: 29px;
+  width: 8px;
+  height: 8px;
+}
+
+.information-opening-dot-three {
+  right: 16px;
+  bottom: 52px;
+  width: 7px;
+  height: 7px;
+  background: #a7b0ed;
+}
+
+.information-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.information-eyebrow {
+  display: inline-block;
+  color: #5a6acf;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.information-coverage {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.information-card {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid #e5e8ef;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(32, 45, 75, 0.035);
+}
+
+.information-card-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  margin-bottom: 20px;
+}
+
+.information-card-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #e4e8f7;
+  border-radius: 11px;
+  background: #eef0ff;
+  color: #5262c4;
+}
+
+.information-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+.information-card-heading h2,
+.information-section-heading h2,
+.information-method h2 {
+  color: #273240;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.information-card-heading p {
+  margin-top: 4px;
+  color: #7b8494;
+  font-size: 13px;
+}
+
+.information-pollutants,
+.information-city-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.information-pollutants li {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 10px;
+  color: #586273;
+  font-size: 13px;
+}
+
+.information-pollutant-symbol {
+  display: grid;
+  min-width: 51px;
+  height: 32px;
+  place-items: center;
+  padding: 0 8px;
+  border: 1px solid #e8eaf0;
+  border-radius: 8px;
+  background: #fafbfc;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.information-city-list {
+  gap: 8px;
+}
+
+.information-city-list li {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: #f8f9fb;
+  color: #414b5b;
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.information-city-list .information-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: #7885d5;
+}
+
+.information-section-heading {
+  margin-bottom: 14px;
+}
+
+.information-section-heading h2 {
+  margin-top: 6px;
+}
+
+.information-scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.information-scenario-card {
+  min-width: 0;
+  padding: 19px 20px;
+  border: 1px solid #e5e8ef;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.information-scenario-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.information-scenario-topline .information-card-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+.information-scenario-type {
+  padding: 5px 9px;
+  border-radius: 20px;
+  background: #f0f2ff;
+  color: #5262c4;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.information-scenario-card h3 {
+  margin-top: 13px;
+  color: #273240;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.information-scenario-card p {
+  margin-top: 7px;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.information-method {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(220px, 0.8fr);
+  align-items: center;
+  gap: 24px;
+  padding: 22px 24px;
+  border: 1px solid #dfe4f5;
+  border-radius: 14px;
+  background: linear-gradient(115deg, #f0f2ff 0%, #ffffff 78%);
+}
+
+.information-method h2 {
+  margin: 0;
+}
+
+.information-method-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: 8px;
+}
+
+.information-method-copy > p {
+  max-width: 720px;
+  margin-top: 8px;
+  color: #586273;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.information-method-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-left: 18px;
+  border-left: 1px solid #d8def0;
+}
+
+.information-method-note .information-card-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.information-method-note h3 {
+  color: #273240;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.information-method-note p {
+  margin-top: 5px;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .information-opening {
+    min-height: 0;
+    padding: 24px;
+  }
+
+  .information-opening-visual {
+    width: 150px;
+    height: 150px;
+    flex-basis: 150px;
+    margin-right: 0;
+  }
+
+  .information-opening-orbit-outer {
+    width: 140px;
+    height: 140px;
+  }
+
+  .information-opening-orbit-inner {
+    width: 104px;
+    height: 104px;
+  }
+
+  .information-coverage,
+  .information-scenario-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .information-method {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .information-method-note {
+    padding: 14px 0 0;
+    border-top: 1px solid #d8def0;
+    border-left: 0;
+  }
+}
+
+@media (max-width: 440px) {
+  .information-opening {
+    padding: 21px 18px;
+  }
+
+  .information-opening-visual {
+    display: none;
+  }
+
+  .information-opening-content > p {
+    font-size: 12px;
+  }
+
+  .information-overview {
+    gap: 22px;
+  }
+
+  .information-card {
+    padding: 18px 16px;
+  }
+
+  .information-pollutants {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .information-method {
+    padding: 19px 17px;
+  }
+}
