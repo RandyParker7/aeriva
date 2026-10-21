@@ -8,6 +8,54 @@
   border-right: 1px solid #273244;
 }
 
+.app-shell.dark-mode .sidebar .get-app-button {
+  border-color: #364256;
+  background: #222e40;
+  color: #b8c3ff;
+}
+
+.app-shell.dark-mode .sidebar .get-app-button:hover {
+  background: #293653;
+}
+
+.app-shell.dark-mode .install-help-dialog {
+  border-color: #303b4d;
+  background: #1b2636;
+  color: #d1d5db;
+}
+
+.app-shell.dark-mode .install-help-dialog h2,
+.app-shell.dark-mode .install-help-platform h3 {
+  color: #e5e7eb;
+}
+
+.app-shell.dark-mode .install-help-intro,
+.app-shell.dark-mode .install-help-platform p,
+.app-shell.dark-mode .install-help-note {
+  color: #aab4c4;
+}
+
+.app-shell.dark-mode .install-help-platform {
+  border-color: #364256;
+}
+
+.app-shell.dark-mode .install-help-platform strong {
+  color: #b8c3ff;
+}
+
+.app-shell.dark-mode .install-help-close {
+  color: #c0cad8;
+}
+
+.app-shell.dark-mode .install-help-close:hover {
+  background: #293653;
+}
+
+.app-shell.dark-mode .install-help-icon {
+  background: #293653;
+  color: #b8c3ff;
+}
+
 .app-shell.dark-mode .content-panel {
   background: #111827;
   color: #d1d5db;
@@ -52,6 +100,15 @@
 .app-shell.dark-mode .content-panel .about-author {
   border-color: #303b4d;
   background: linear-gradient(112deg, #202b40 0%, #1b2636 82%);
+}
+
+.app-shell.dark-mode .sidebar .theme-toggle-mobile {
+  color: #c0cad8;
+}
+
+.app-shell.dark-mode .sidebar .theme-toggle-mobile:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #b8c3ff;
 }
 
 .app-shell.dark-mode .content-panel .information-opening-highlights li,

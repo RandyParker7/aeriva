@@ -420,7 +420,7 @@ function PredictionPage() {
             </div>
             <div className="prediction-fields">
               <label className="prediction-field" htmlFor="prediction-date">
-                <span>Tanggal prediksi (WIB)</span>
+                <span>Tanggal prediksi</span>
                 <input
                   id="prediction-date"
                   type="date"
@@ -466,7 +466,7 @@ function PredictionPage() {
 
               <div className="prediction-hour">
                 <div className="prediction-hour-heading">
-                  <label htmlFor="prediction-hour">Waktu prediksi (WIB)</label>
+                  <label htmlFor="prediction-hour">Waktu prediksi</label>
                   <output htmlFor="prediction-hour">
                     {String(predictionHour).padStart(2, '0')}:00
                   </output>
@@ -545,7 +545,7 @@ function PredictionPage() {
                     <strong className="prediction-result-time">
                       {formatUtcTimeInWib(
                         predictionResult.previous_hour_pollutant.time,
-                      )} WIB
+                      )} 
                     </strong>
                   </div>
                   <p>
@@ -567,7 +567,7 @@ function PredictionPage() {
                     <strong className="prediction-result-time">
                       {formatUtcTimeInWib(
                         predictionResult.prediction_time,
-                      )} WIB
+                      )}
                     </strong>
                   </div>
                   <p>
@@ -623,7 +623,7 @@ function PredictionPage() {
             <p className="current-conditions-time">
               Data per jam {formatUtcTimeInWib(
                 displayedConditions.updated_at,
-              )} WIB
+              )} 
             </p>
           )}
           {displayedConditions && (

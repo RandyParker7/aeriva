@@ -103,7 +103,7 @@ function EvaluationChart({ points, pollutant }) {
       <div className="evaluation-section-heading">
         <div>
           <h2 id="evaluation-chart-title">Perbandingan hasil</h2>
-          <p>Data aktual dan prediksi per jam (WIB).</p>
+          <p>Data aktual dan prediksi per jam.</p>
         </div>
         <span className="evaluation-chart-unit">{pollutant}</span>
       </div>
@@ -173,7 +173,7 @@ function EvaluationChart({ points, pollutant }) {
               <g transform={`translate(${tooltipX}, ${tooltipY})`}>
                 <rect width={tooltipWidth} height={tooltipHeight} rx="5" />
                 <text className="evaluation-tooltip-time" x="7" y="13">
-                  {formatUtcDateTimeInWib(hoveredDataPoint.time)} WIB
+                  {formatUtcDateTimeInWib(hoveredDataPoint.time)}
                 </text>
                 <text
                   className="evaluation-tooltip-value"
@@ -415,7 +415,7 @@ function EvaluationPage() {
               <p>
                 {evaluationResult.location} · {evaluationResult.pollutant} ·{' '}
                 {formatUtcDateTimeInWib(evaluationResult.start_time)} sampai{' '}
-                {formatUtcDateTimeInWib(evaluationResult.end_time)} WIB
+                {formatUtcDateTimeInWib(evaluationResult.end_time)} 
               </p>
             </div>
             <span className="evaluation-point-count">

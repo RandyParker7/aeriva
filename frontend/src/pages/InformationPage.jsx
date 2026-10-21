@@ -101,12 +101,13 @@ function InformationPage() {
               Kualitas udara Jawa Timur
             </span>
             <h2 id="information-opening-title">
-              Mengenal <span>AERIVA</span>
+              <span>AERIVA</span>
             </h2>
             <p>
-              AERIVA memprediksi konsentrasi polutan dengan machine learning
-              dan membantu menjelaskan faktor di balik setiap hasil. Jelajahi
-              cakupan kota, pilihan skenario, serta interpretasi prediksinya.
+              AERIVA merupakan aplikasi yang dirancang untuk memprediksi konsentrasi polutan udara di Provinsi Jawa Timur 
+              menggunakan algoritma LightGBM (Light Gradient Boosting Machine). Aplikasi ini dilengkapi interpretasi SHAP 
+              untuk menjelaskan faktor yang memengaruhi hasil prediksi, serta menyediakan pilihan lokasi, skenario prediksi, 
+              dan visualisasi evaluasi model.
             </p>
             <ul className="information-opening-highlights" aria-label="Cakupan AERIVA">
               <li><strong>5</strong><span>kota</span></li>
@@ -115,21 +116,7 @@ function InformationPage() {
             </ul>
           </div>
           <div className="information-opening-visual" aria-hidden="true">
-            <div className="information-opening-orbit information-opening-orbit-outer" />
-            <div className="information-opening-orbit information-opening-orbit-inner" />
-            <div className="information-opening-logo">
-              <svg
-                className="information-brand-mark"
-                viewBox="0 0 32 32"
-                focusable="false"
-              >
-                <path d="M16 4 28 26h-7l-5-9-5 9H4L16 4Z" />
-                <path d="M13.2 20h5.6l-2.8-5.1-2.8 5.1Z" />
-              </svg>
-            </div>
-            <span className="information-opening-dot information-opening-dot-one" />
-            <span className="information-opening-dot information-opening-dot-two" />
-            <span className="information-opening-dot information-opening-dot-three" />
+            <img src="/aeriva-logo.png" alt="" />
           </div>
         </section>
       </header>
@@ -231,6 +218,59 @@ function InformationPage() {
             </div>
           </div>
         </aside>
+
+        <section className="information-tutorial" aria-labelledby="tutorial-title">
+          <div className="information-section-heading">
+            <span className="information-eyebrow">Panduan penggunaan</span>
+            <h2 id="tutorial-title">AERIVA</h2>
+          </div>
+          <ol className="information-tutorial-steps">
+            <li className="information-tutorial-step">
+              <span className="information-tutorial-number">01</span>
+              <div>
+                <h3>Buka Halaman Prediction</h3>
+                <p>
+                  Pilih skenario, kota, dan polutan yang ingin diprediksi.
+                  Skenario 1 memakai riwayat polutan; Skenario 2 juga memakai
+                  data meteorologi.
+                </p>
+              </div>
+            </li>
+            <li className="information-tutorial-step">
+              <span className="information-tutorial-number">02</span>
+              <div>
+                <h3>Tentukan waktu prediksi</h3>
+                <p>
+                  Pilih tanggal dan jam prediksi, lalu tekan
+                  <strong> Prediksi</strong>. Hasil menampilkan estimasi
+                  konsentrasi polutan pada waktu tersebut.
+                </p>
+              </div>
+            </li>
+            <li className="information-tutorial-step">
+              <span className="information-tutorial-number">03</span>
+              <div>
+                <h3>Pahami faktor yang mempengaruhi hasil prediksi</h3>
+                <p>
+                  Baca bagian Interpretasi SHAP, garis hijau menunjukkan fitur
+                  yang mendorong hasil naik, garis merah mendorong hasil turun.
+                  Panjang garis menunjukkan besar kontribusi masing - masing fitur.
+                </p>
+              </div>
+            </li>
+            <li className="information-tutorial-step">
+              <span className="information-tutorial-number">04</span>
+              <div>
+                <h3>Bandingkan Hasil Prediksi di halaman Evaluation</h3>
+                <p>
+                  Pilih kota, jenis polutan, dan rentang waktu untuk mengevaluasi performa model. 
+                  Lihat perbandingan metrik evaluasi, hasil prediksi Skenario 1 dan 2, serta data aktual. 
+                  Arahkan kursor ke grafik untuk melihat detail nilai pada setiap jam.
+                </p>
+              </div>
+            </li>
+          </ol>
+        </section>
       </section>
     </main>
   )

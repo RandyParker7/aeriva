@@ -1,0 +1,179 @@
+.about-page {
+  width: 100%;
+  max-width: 1440px;
+}
+
+.about-page-header {
+  margin-bottom: 26px;
+}
+
+.about-page-header h1 {
+  color: #2f3237;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.about-page-header p,
+.about-section-header > p {
+  margin-top: 7px;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.about-author {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 26px;
+  border: 1px solid #dfe4f5;
+  border-radius: 14px;
+  background: linear-gradient(112deg, #f1f3ff 0%, #ffffff 82%);
+  box-shadow: 0 8px 24px rgba(32, 45, 75, 0.035);
+}
+
+.about-avatar,
+.about-supervisor-avatar {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #e4e8f7;
+  background: #eef0ff;
+  color: #596bc9;
+}
+
+.about-avatar {
+  width: 68px;
+  height: 68px;
+  border-radius: 20px;
+}
+
+.about-person-icon {
+  display: block;
+  width: 27px;
+  height: 27px;
+}
+
+.about-eyebrow {
+  display: inline-block;
+  color: #5a6acf;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.about-author-copy h2,
+.about-section-header h2 {
+  margin-top: 5px;
+  color: #273240;
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+.about-author-copy > p {
+  max-width: 760px;
+  margin-top: 7px;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.about-supervisors {
+  margin-top: 32px;
+}
+
+.about-section-header {
+  margin-bottom: 15px;
+}
+
+.about-section-header h2 {
+  margin-top: 5px;
+}
+
+.about-supervisor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.about-supervisor-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 114px;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid #e5e8ef;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(32, 45, 75, 0.035);
+}
+
+.about-supervisor-number {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  color: #a0a8b6;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.about-supervisor-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+}
+
+.about-supervisor-avatar .about-person-icon {
+  width: 23px;
+  height: 23px;
+}
+
+.about-supervisor-role {
+  color: #7b8494;
+  font-size: 12px;
+}
+
+.about-supervisor-card h3 {
+  margin-top: 5px;
+  padding-right: 28px;
+  color: #273240;
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+  .about-supervisor-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .about-author {
+    align-items: flex-start;
+    gap: 15px;
+    padding: 20px;
+  }
+
+  .about-avatar {
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+  }
+
+  .about-avatar .about-person-icon {
+    width: 23px;
+    height: 23px;
+  }
+}
+
+@media (max-width: 400px) {
+  .about-author {
+    flex-direction: column;
+  }
+}
