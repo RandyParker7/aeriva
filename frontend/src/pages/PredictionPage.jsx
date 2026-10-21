@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
+import {
+  formatUtcDateInWib,
+  formatUtcTimeInWib,
+  wibDateTimeToUtcIso,
+} from '../utils/time'
 import './PredictionPage.css'
+
+const CONDITIONS_REFRESH_INTERVAL = 15 * 60 * 1000
 
 const scenarios = [
   {
@@ -32,7 +39,7 @@ function formatShapFeature(feature) {
   return `${shapFeatureLabels[match[1]] || match[1]} · lag ${match[2]}`
 }
 
-function ShapInterpretation({ interpretation, scenario }) {
+function ShapInterpretation({ interpretation }) {
   const maxImpact = Math.max(
     ...interpretation.features.map((feature) => Math.abs(feature.shap_value)),
   )
@@ -43,8 +50,13 @@ function ShapInterpretation({ interpretation, scenario }) {
         <div>
           <h2 id="prediction-shap-title">Interpretasi model (SHAP)</h2>
           <p>
-            Variabel diurutkan dari pengaruh terbesar pada prediksi {scenario}.
-            {' '}Nilai positif menaikkan prediksi, nilai negatif menurunkannya.
+            Nilai prediksi dimulai dari baseline, yaitu nilai awal rata-rata
+            model. Setiap fitur menggeser nilai itu: kontribusi positif
+            (menaikkan) menambah prediksi dari baseline, sedangkan kontribusi
+            negatif (menurunkan) menguranginya. Ini menjelaskan pengaruh fitur
+            terhadap hasil model, bukan berarti nilai fiturnya sendiri naik
+            atau turun. Fitur diurutkan berdasarkan besar pengaruhnya; semakin
+            panjang garis, semakin besar kontribusinya.
           </p>
         </div>
         <span className="prediction-shap-baseline">
@@ -183,6 +195,24 @@ function PredictionPage() {
   }, [conditionsLocation, conditionsRefresh])
 
   useEffect(() => {
+    const refreshConditions = () => {
+      if (document.visibilityState === 'visible') {
+        setConditionsRefresh((refresh) => refresh + 1)
+      }
+    }
+    const intervalId = window.setInterval(
+      refreshConditions,
+      CONDITIONS_REFRESH_INTERVAL,
+    )
+
+    document.addEventListener('visibilitychange', refreshConditions)
+    return () => {
+      window.clearInterval(intervalId)
+      document.removeEventListener('visibilitychange', refreshConditions)
+    }
+  }, [])
+
+  useEffect(() => {
     const locationCoordinates = options?.location_coordinates
     if (!locationCoordinates || !conditionsMapRef.current) {
       return undefined
@@ -311,7 +341,10 @@ function PredictionPage() {
           location,
           pollutant,
           scenario: selectedScenario,
-          prediction_time: `${predictionDate}T${String(predictionHour).padStart(2, '0')}:00`,
+          prediction_time: wibDateTimeToUtcIso(
+            predictionDate,
+            predictionHour,
+          ),
         }),
       })
       const data = await response.json()
@@ -387,7 +420,7 @@ function PredictionPage() {
             </div>
             <div className="prediction-fields">
               <label className="prediction-field" htmlFor="prediction-date">
-                <span>Tanggal prediksi</span>
+                <span>Tanggal prediksi (WIB)</span>
                 <input
                   id="prediction-date"
                   type="date"
@@ -433,7 +466,7 @@ function PredictionPage() {
 
               <div className="prediction-hour">
                 <div className="prediction-hour-heading">
-                  <label htmlFor="prediction-hour">Waktu prediksi</label>
+                  <label htmlFor="prediction-hour">Waktu prediksi (WIB)</label>
                   <output htmlFor="prediction-hour">
                     {String(predictionHour).padStart(2, '0')}:00
                   </output>
@@ -505,10 +538,14 @@ function PredictionPage() {
                   </strong>
                   <div className="prediction-result-datetime">
                     <span className="prediction-result-date">
-                      {predictionResult.previous_hour_pollutant.time.split('T')[0]}
+                      {formatUtcDateInWib(
+                        predictionResult.previous_hour_pollutant.time,
+                      )}
                     </span>
                     <strong className="prediction-result-time">
-                      {predictionResult.previous_hour_pollutant.time.split('T')[1]}
+                      {formatUtcTimeInWib(
+                        predictionResult.previous_hour_pollutant.time,
+                      )} WIB
                     </strong>
                   </div>
                   <p>
@@ -523,10 +560,14 @@ function PredictionPage() {
                   </p>
                   <div className="prediction-result-datetime">
                     <span className="prediction-result-date">
-                      {predictionResult.prediction_time.split('T')[0]}
+                      {formatUtcDateInWib(
+                        predictionResult.prediction_time,
+                      )}
                     </span>
                     <strong className="prediction-result-time">
-                      {predictionResult.prediction_time.split('T')[1]}
+                      {formatUtcTimeInWib(
+                        predictionResult.prediction_time,
+                      )} WIB
                     </strong>
                   </div>
                   <p>
@@ -540,7 +581,6 @@ function PredictionPage() {
                 </section>
                 <ShapInterpretation
                   interpretation={predictionResult.interpretation}
-                  scenario={predictionResult.scenario}
                 />
               </div>
             )}
@@ -552,7 +592,7 @@ function PredictionPage() {
               <p className="current-conditions-eyebrow">PEMANTAUAN LANGSUNG</p>
               <h2 id="current-conditions-title">Kondisi saat ini</h2>
               <p className="conditions-location-prompt">
-                Klik marker untuk memantau
+                Klik marker pada peta untuk melihat kondisi udara dan cuaca terkini di lokasi pemantauan.
               </p>
             </div>
             <button
@@ -581,7 +621,9 @@ function PredictionPage() {
           )}
           {displayedConditions?.updated_at && (
             <p className="current-conditions-time">
-              Data per jam {displayedConditions.updated_at.slice(11, 16)} WIB
+              Data per jam {formatUtcTimeInWib(
+                displayedConditions.updated_at,
+              )} WIB
             </p>
           )}
           {displayedConditions && (
@@ -656,7 +698,7 @@ function PredictionPage() {
             </p>
           )}
           <p className="current-conditions-source">
-            Sumber data: Open-Meteo · Waktu lokal WIB
+            Sumber: Open-Meteo · WIB · otomatis diperbarui setiap 15 menit
           </p>
         </aside>
       </div>

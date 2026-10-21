@@ -42,6 +42,12 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
 }
 
+.app-shell.dark-mode .content-panel .evaluation-results,
+.app-shell.dark-mode .content-panel .evaluation-results-heading {
+  background: transparent;
+  box-shadow: none;
+}
+
 .app-shell.dark-mode .content-panel .information-opening,
 .app-shell.dark-mode .content-panel .about-author {
   border-color: #303b4d;
@@ -72,6 +78,18 @@
 .app-shell.dark-mode .content-panel .information-method {
   border-color: #303b4d;
   background: linear-gradient(112deg, #202b40 0%, #1b2636 82%);
+}
+
+.app-shell.dark-mode .content-panel .information-tutorial-step {
+  border-color: #303b4d;
+  background-color: #1b2636;
+  box-shadow: none;
+}
+
+.app-shell.dark-mode .content-panel .information-tutorial-number {
+  border-color: #3a465a;
+  background-color: #222e40;
+  color: #b8c3ff;
 }
 
 .app-shell.dark-mode .content-panel .information-method-note {
@@ -187,6 +205,51 @@
   border-color: #364256;
 }
 
+.app-shell.dark-mode .content-panel .conditions-map {
+  background: #151e2b;
+}
+
+.app-shell.dark-mode .content-panel .conditions-map .leaflet-tile-pane {
+  filter: brightness(0.7) invert(1) contrast(0.85) hue-rotate(180deg) saturate(0.55);
+}
+
+.app-shell.dark-mode .content-panel .conditions-map .leaflet-control-attribution {
+  background: rgba(21, 30, 43, 0.9);
+  color: #c0cad8;
+}
+
+.app-shell.dark-mode .content-panel .conditions-map .leaflet-control-attribution a {
+  color: #b8c3ff;
+}
+
+.app-shell.dark-mode .content-panel .conditions-map .leaflet-bar a {
+  border-color: #465367;
+  background: #222e40;
+  color: #d1d5db;
+}
+
+.app-shell.dark-mode .content-panel .conditions-map .leaflet-bar a:hover {
+  background: #293653;
+}
+
+.app-shell.dark-mode .content-panel .information-eyebrow,
+.app-shell.dark-mode .content-panel .about-eyebrow,
+.app-shell.dark-mode .content-panel .information-opening-content h2 span,
+.app-shell.dark-mode .content-panel .conditions-location-prompt strong,
+.app-shell.dark-mode .content-panel .evaluation-metric strong,
+.app-shell.dark-mode .content-panel .evaluation-point-count,
+.app-shell.dark-mode .content-panel .information-opening-badge,
+.app-shell.dark-mode .content-panel .information-opening-highlights strong,
+.app-shell.dark-mode .content-panel .information-scenario-type,
+.app-shell.dark-mode .content-panel .information-card-icon,
+.app-shell.dark-mode .content-panel .current-conditions-place-icon {
+  color: #b8c3ff;
+}
+
+.app-shell.dark-mode .content-panel .scenario-option.selected .scenario-name {
+  color: #b8c3ff;
+}
+
 .app-shell.dark-mode .content-panel .information-opening-badge,
 .app-shell.dark-mode .content-panel .about-avatar,
 .app-shell.dark-mode .content-panel .about-supervisor-avatar {
@@ -196,6 +259,10 @@
 .app-shell.dark-mode .sidebar .brand,
 .app-shell.dark-mode .sidebar .nav-item {
   color: #d1d5db;
+}
+
+.app-shell.dark-mode .sidebar .sidebar-toggle {
+  color: #c0cad8;
 }
 
 .app-shell.dark-mode .sidebar .nav-item:hover {

@@ -472,11 +472,11 @@
 }
 
 .prediction-shap-impact.positive {
-  color: #986341;
+  color: #16803c;
 }
 
 .prediction-shap-impact.negative {
-  color: #587a69;
+  color: #c62828;
 }
 
 .prediction-shap-impact.neutral {
@@ -497,11 +497,11 @@
 }
 
 .prediction-shap-bar.positive {
-  background: #b27c55;
+  background: #22a447;
 }
 
 .prediction-shap-bar.negative {
-  background: #6d9180;
+  background: #dc3545;
 }
 
 .prediction-shap-bar.neutral {
@@ -832,7 +832,6 @@
 .current-conditions-source {
   margin-top: 20px;
   padding-top: 13px;
-  border-top: 1px solid #edf0f5;
   color: #87909e;
   font-size: 11px;
 }

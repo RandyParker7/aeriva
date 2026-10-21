@@ -1,4 +1,9 @@
 import { useEffect, useState } from 'react'
+import {
+  formatUtcDateTimeInWib,
+  formatUtcTimeInWib,
+  wibDateTimeToUtcIso,
+} from '../utils/time'
 import './EvaluationPage.css'
 
 const metricDefinitions = [
@@ -55,7 +60,7 @@ function EvaluationChart({ points, pollutant }) {
     ? points[hoveredPoint.index]
     : null
   const hoveredSeries = series.find((item) => item.key === hoveredPoint?.key)
-  const tooltipWidth = 112
+  const tooltipWidth = 158
   const tooltipHeight = 38
   const tooltipX = hoveredPoint
     ? Math.min(
@@ -98,7 +103,7 @@ function EvaluationChart({ points, pollutant }) {
       <div className="evaluation-section-heading">
         <div>
           <h2 id="evaluation-chart-title">Perbandingan hasil</h2>
-          <p>Data aktual dan prediksi untuk setiap jam dalam periode evaluasi.</p>
+          <p>Data aktual dan prediksi per jam (WIB).</p>
         </div>
         <span className="evaluation-chart-unit">{pollutant}</span>
       </div>
@@ -133,7 +138,7 @@ function EvaluationChart({ points, pollutant }) {
               y={height - 15}
               textAnchor={index === 0 ? 'start' : index === points.length - 1 ? 'end' : 'middle'}
             >
-              {points[index].time.slice(11, 16)}
+              {formatUtcTimeInWib(points[index].time)}
             </text>
           ))}
           {series.map((item) => (
@@ -168,7 +173,7 @@ function EvaluationChart({ points, pollutant }) {
               <g transform={`translate(${tooltipX}, ${tooltipY})`}>
                 <rect width={tooltipWidth} height={tooltipHeight} rx="5" />
                 <text className="evaluation-tooltip-time" x="7" y="13">
-                  {hoveredDataPoint.time.slice(11, 16)}
+                  {formatUtcDateTimeInWib(hoveredDataPoint.time)} WIB
                 </text>
                 <text
                   className="evaluation-tooltip-value"
@@ -259,7 +264,10 @@ function EvaluationPage() {
         body: JSON.stringify({
           location,
           pollutant,
-          prediction_time: `${evaluationDate}T${String(evaluationHour).padStart(2, '0')}:00`,
+          prediction_time: wibDateTimeToUtcIso(
+            evaluationDate,
+            evaluationHour,
+          ),
         }),
       })
       const data = await response.json()
@@ -406,8 +414,8 @@ function EvaluationPage() {
               <h2>Hasil evaluasi</h2>
               <p>
                 {evaluationResult.location} · {evaluationResult.pollutant} ·{' '}
-                {evaluationResult.start_time.replace('T', ' ')} sampai{' '}
-                {evaluationResult.end_time.replace('T', ' ')}
+                {formatUtcDateTimeInWib(evaluationResult.start_time)} sampai{' '}
+                {formatUtcDateTimeInWib(evaluationResult.end_time)} WIB
               </p>
             </div>
             <span className="evaluation-point-count">

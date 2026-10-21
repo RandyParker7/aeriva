@@ -1,6 +1,5 @@
 import math
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from prediction import get_model_config, predict_models
@@ -97,13 +96,12 @@ def create_evaluation_router(
                 )
             )
 
-        jakarta_timezone = ZoneInfo("Asia/Jakarta")
         evaluation_end = request.prediction_time
         if evaluation_end.tzinfo is None:
-            evaluation_end = evaluation_end.replace(tzinfo=jakarta_timezone)
+            evaluation_end = evaluation_end.replace(tzinfo=timezone.utc)
         else:
-            evaluation_end = evaluation_end.astimezone(jakarta_timezone)
-        if evaluation_end > datetime.now(jakarta_timezone):
+            evaluation_end = evaluation_end.astimezone(timezone.utc)
+        if evaluation_end > datetime.now(timezone.utc):
             raise HTTPException(
                 status_code=400,
                 detail="Waktu evaluasi tidak boleh berada di masa depan."
@@ -121,7 +119,7 @@ def create_evaluation_router(
                 "latitude": latitude,
                 "longitude": longitude,
                 "hourly": [pollutant_variable],
-                "timezone": "Asia/Jakarta",
+                "timezone": "UTC",
                 "start_hour": feature_start.strftime("%Y-%m-%dT%H:%M"),
                 "end_hour": evaluation_end.strftime("%Y-%m-%dT%H:%M")
             }
@@ -144,7 +142,7 @@ def create_evaluation_router(
                 "latitude": latitude,
                 "longitude": longitude,
                 "hourly": weather_variables,
-                "timezone": "Asia/Jakarta",
+                "timezone": "UTC",
                 "start_date": weather_start_date.strftime("%Y-%m-%d"),
                 "end_date": evaluation_end.date().strftime("%Y-%m-%d")
             }

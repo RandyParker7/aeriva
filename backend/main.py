@@ -4,8 +4,7 @@ import requests_cache
 from retry_requests import retry
 import math
 from pydantic import BaseModel
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta, timezone
 from prediction import (
     get_model_config,
     get_available_predictions,
@@ -25,7 +24,7 @@ app = FastAPI(
 
 cache_session = requests_cache.CachedSession(
     ".cache",
-    expire_after=3600
+    expire_after=900
 )
 
 retry_session = retry(
@@ -121,7 +120,7 @@ def get_pollution(location: str):
             "sulphur_dioxide",
             "ozone"
         ],
-        "timezone": "Asia/Jakarta"
+        "timezone": "UTC"
     }
 
     responses = openmeteo.weather_api(
@@ -136,7 +135,7 @@ def get_pollution(location: str):
     "location": location,
     "latitude": float(response.Latitude()),
     "longitude": float(response.Longitude()),
-    "timezone": response.Timezone().decode(),
+    "timezone": "UTC",
     "hourly": {
         "pm2_5": clean_values(hourly.Variables(0).ValuesAsNumpy()),
         "carbon_monoxide": clean_values(hourly.Variables(1).ValuesAsNumpy()),
@@ -156,7 +155,7 @@ def get_current_conditions(location: str):
 
     latitude = locations[location]["latitude"]
     longitude = locations[location]["longitude"]
-    timezone = "Asia/Jakarta"
+    timezone_name = "UTC"
 
     pollutant_variables = list(pollutants.values())
     pollutant_response = openmeteo.weather_api(
@@ -165,7 +164,7 @@ def get_current_conditions(location: str):
             "latitude": latitude,
             "longitude": longitude,
             "current": pollutant_variables,
-            "timezone": timezone
+            "timezone": timezone_name
         }
     )[0]
     weather_variables = list(METEOROLOGICAL_VARIABLES.values())
@@ -175,7 +174,7 @@ def get_current_conditions(location: str):
             "latitude": latitude,
             "longitude": longitude,
             "current": weather_variables,
-            "timezone": timezone
+            "timezone": timezone_name
         }
     )[0]
 
@@ -183,7 +182,7 @@ def get_current_conditions(location: str):
     weather_current = weather_response.Current()
     current_time = datetime.fromtimestamp(
         weather_current.Time(),
-        tz=ZoneInfo(timezone)
+        tz=timezone.utc
     ).strftime("%Y-%m-%dT%H:%M")
     values = {
         variable: clean_values([
@@ -248,12 +247,11 @@ def predict(request: PredictionRequest):
                 f"{get_available_predictions()}"
             )
         )
-    jakarta_timezone = ZoneInfo("Asia/Jakarta")
     prediction_time = request.prediction_time
     if prediction_time.tzinfo is None:
-        prediction_time = prediction_time.replace(tzinfo=jakarta_timezone)
+        prediction_time = prediction_time.replace(tzinfo=timezone.utc)
     else:
-        prediction_time = prediction_time.astimezone(jakarta_timezone)
+        prediction_time = prediction_time.astimezone(timezone.utc)
 
     latitude = locations[request.location]["latitude"]
     longitude = locations[request.location]["longitude"]
@@ -277,7 +275,7 @@ def predict(request: PredictionRequest):
         time_start = prediction_time - timedelta(hours=max_pollutant_lag)
         time_end = prediction_time - timedelta(hours=min_pollutant_lag)
         latest_supported_date = (
-            datetime.now(jakarta_timezone).date() + timedelta(days=5)
+            datetime.now(timezone.utc).date() + timedelta(days=5)
         )
         if time_end.date() > latest_supported_date:
             raise HTTPException(
@@ -297,7 +295,7 @@ def predict(request: PredictionRequest):
             "latitude": latitude,
             "longitude": longitude,
             "hourly": pollutant_variables,
-            "timezone": "Asia/Jakarta",
+            "timezone": "UTC",
             "start_hour": time_start.strftime("%Y-%m-%dT%H:%M"),
             "end_hour": time_end.strftime("%Y-%m-%dT%H:%M")
         }
@@ -340,9 +338,9 @@ def predict(request: PredictionRequest):
             "latitude": latitude,
             "longitude": longitude,
             "hourly": weather_variables,
-            "timezone": "Asia/Jakarta",
+            "timezone": "UTC",
         }
-        today = datetime.now(jakarta_timezone).date()
+        today = datetime.now(timezone.utc).date()
         if weather_end.date() < today:
             weather_url = "https://archive-api.open-meteo.com/v1/archive"
             weather_params.update({
@@ -379,7 +377,7 @@ def predict(request: PredictionRequest):
         }
         weather_series_start = datetime.fromtimestamp(
             weather_hourly.Time(),
-            tz=jakarta_timezone
+            tz=timezone.utc
         )
         weather_feature_values = {}
         for feature, (variable, lag) in weather_features.items():

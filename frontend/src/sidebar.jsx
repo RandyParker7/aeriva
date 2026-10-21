@@ -103,7 +103,7 @@ function App() {
                 <path d="M12 2v2m0 16v2m10-10h-2M4 12H2m17.1-7.1-1.4 1.4M6.3 17.7l-1.4 1.4m14.2 0-1.4-1.4M6.3 6.3 4.9 4.9" />
               )}
             </svg>
-            <span>{isDarkMode ? 'Mode terang' : 'Mode gelap'}</span>
+            <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
           </button>
         </div>
       </aside>
