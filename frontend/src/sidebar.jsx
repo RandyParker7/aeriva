@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './layout.css'
 import './sidebar.css'
+import './theme.css'
 import PredictionPage from './pages/PredictionPage'
 import EvaluationPage from './pages/EvaluationPage'
 import InformationPage from './pages/InformationPage'
@@ -23,10 +24,21 @@ const pageMap = {
 function App() {
   const [activeMenu, setActiveMenu] = useState('prediction')
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [isDarkMode, setIsDarkMode] = useState(
+    () => window.localStorage.getItem('aeriva-theme') === 'dark',
+  )
   const ActivePage = pageMap[activeMenu] || AboutPage
 
+  useEffect(() => {
+    window.localStorage.setItem('aeriva-theme', isDarkMode ? 'dark' : 'light')
+  }, [isDarkMode])
+
   return (
-    <div className={`app-shell ${isSidebarOpen ? '' : 'sidebar-closed'}`}>
+    <div
+      className={`app-shell ${isSidebarOpen ? '' : 'sidebar-closed'} ${
+        isDarkMode ? 'dark-mode' : ''
+      }`}
+    >
       <aside className="sidebar">
         <div className="sidebar-header">
           <a className="brand" href="/" aria-label="Aeriva home">
@@ -72,6 +84,28 @@ function App() {
             </button>
           ))}
         </nav>
+
+        <div className="sidebar-footer">
+          <button
+            className="theme-toggle"
+            type="button"
+            aria-label={`Aktifkan mode ${isDarkMode ? 'terang' : 'gelap'}`}
+            aria-pressed={isDarkMode}
+            onClick={() => setIsDarkMode((enabled) => !enabled)}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              {isDarkMode ? (
+                <circle cx="12" cy="12" r="4" />
+              ) : (
+                <path d="M20.2 15.5A8.5 8.5 0 0 1 8.5 3.8 8.5 8.5 0 1 0 20.2 15.5Z" />
+              )}
+              {isDarkMode && (
+                <path d="M12 2v2m0 16v2m10-10h-2M4 12H2m17.1-7.1-1.4 1.4M6.3 17.7l-1.4 1.4m14.2 0-1.4-1.4M6.3 6.3 4.9 4.9" />
+              )}
+            </svg>
+            <span>{isDarkMode ? 'Mode terang' : 'Mode gelap'}</span>
+          </button>
+        </div>
       </aside>
 
       <main className="content-panel">

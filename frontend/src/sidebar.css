@@ -133,6 +133,11 @@
   font-weight: 600;
 }
 
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 24px;
+}
+
 @media (max-width: 640px) {
   .sidebar {
     position: static;

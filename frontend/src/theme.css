@@ -1,0 +1,284 @@
+.app-shell.dark-mode {
+  color-scheme: dark;
+  background: #111827;
+}
+
+.app-shell.dark-mode .sidebar {
+  background: #151d2b;
+  border-right: 1px solid #273244;
+}
+
+.app-shell.dark-mode .content-panel {
+  background: #111827;
+  color: #d1d5db;
+}
+
+.app-shell.dark-mode .content-panel h1,
+.app-shell.dark-mode .content-panel h2,
+.app-shell.dark-mode .content-panel h3,
+.app-shell.dark-mode .content-panel h4,
+.app-shell.dark-mode .content-panel legend,
+.app-shell.dark-mode .content-panel label,
+.app-shell.dark-mode .content-panel strong,
+.app-shell.dark-mode .content-panel .scenario-name,
+.app-shell.dark-mode .content-panel .prediction-field,
+.app-shell.dark-mode .content-panel .evaluation-field {
+  color: #e5e7eb;
+}
+
+.app-shell.dark-mode .content-panel p,
+.app-shell.dark-mode .content-panel .scenario-description,
+.app-shell.dark-mode .content-panel .prediction-intro {
+  color: #aab4c4;
+}
+
+.app-shell.dark-mode .content-panel [class*="-module"],
+.app-shell.dark-mode .content-panel [class*="-card"],
+.app-shell.dark-mode .content-panel [class*="-result"],
+.app-shell.dark-mode .content-panel .current-conditions,
+.app-shell.dark-mode .content-panel .prediction-shap {
+  border-color: #303b4d;
+  background-color: #1b2636;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.app-shell.dark-mode .content-panel .information-opening,
+.app-shell.dark-mode .content-panel .about-author {
+  border-color: #303b4d;
+  background: linear-gradient(112deg, #202b40 0%, #1b2636 82%);
+}
+
+.app-shell.dark-mode .content-panel .information-opening-highlights li,
+.app-shell.dark-mode .content-panel .prediction-shap-track,
+.app-shell.dark-mode .content-panel .condition-card,
+.app-shell.dark-mode .content-panel .prediction-previous-hour,
+.app-shell.dark-mode .content-panel .evaluation-metric,
+.app-shell.dark-mode .content-panel .evaluation-point-count,
+.app-shell.dark-mode .content-panel .evaluation-chart-unit,
+.app-shell.dark-mode .content-panel .prediction-shap-baseline,
+.app-shell.dark-mode .content-panel .current-conditions-time,
+.app-shell.dark-mode .content-panel .conditions-status,
+.app-shell.dark-mode .content-panel .conditions-loading,
+.app-shell.dark-mode .content-panel .conditions-refresh,
+.app-shell.dark-mode .content-panel .current-conditions-location-meta,
+.app-shell.dark-mode .content-panel .information-card-icon,
+.app-shell.dark-mode .content-panel .information-pollutant-symbol,
+.app-shell.dark-mode .content-panel .information-city-list li,
+.app-shell.dark-mode .content-panel .information-scenario-type {
+  border-color: #364256;
+  background-color: #222e40;
+}
+
+.app-shell.dark-mode .content-panel .information-method {
+  border-color: #303b4d;
+  background: linear-gradient(112deg, #202b40 0%, #1b2636 82%);
+}
+
+.app-shell.dark-mode .content-panel .information-method-note {
+  border-color: #3a465a;
+}
+
+.app-shell.dark-mode .content-panel .information-method-note .information-card-icon,
+.app-shell.dark-mode .content-panel .current-conditions-place-icon {
+  background-color: #293653;
+}
+
+.app-shell.dark-mode .content-panel .information-opening-badge {
+  border-color: #3a465a;
+  background-color: #222e40;
+}
+
+.app-shell.dark-mode .content-panel .conditions-error {
+  border-color: #653d48;
+  background-color: #38232c;
+}
+
+.app-shell.dark-mode .content-panel .prediction-loading-spinner,
+.app-shell.dark-mode .content-panel .conditions-loading-spinner {
+  border-color: #465367;
+  border-top-color: #8290e8;
+}
+
+.app-shell.dark-mode .content-panel .evaluation-chart-grid {
+  stroke: #354155;
+}
+
+.app-shell.dark-mode .content-panel .evaluation-chart-hover > circle.evaluation-line-actual,
+.app-shell.dark-mode .content-panel .evaluation-chart-hover > circle.evaluation-line-s1,
+.app-shell.dark-mode .content-panel .evaluation-chart-hover > circle.evaluation-line-s2 {
+  fill: #1b2636;
+}
+
+.app-shell.dark-mode .content-panel .evaluation-chart-hover rect {
+  fill: #222e40;
+  stroke: #465367;
+}
+
+.app-shell.dark-mode .content-panel .evaluation-tooltip-time,
+.app-shell.dark-mode .content-panel .evaluation-tooltip-value {
+  fill: #d1d5db;
+}
+
+.app-shell.dark-mode .content-panel .evaluation-hourly-points circle {
+  stroke: #1b2636;
+}
+
+.app-shell.dark-mode .content-panel .scenario-option:hover {
+  border-color: #465367;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.app-shell.dark-mode .content-panel input,
+.app-shell.dark-mode .content-panel select,
+.app-shell.dark-mode .content-panel textarea {
+  border-color: #465367;
+  background-color: #151e2b;
+  color: #e5e7eb;
+}
+
+.app-shell.dark-mode .content-panel input::placeholder,
+.app-shell.dark-mode .content-panel textarea::placeholder {
+  color: #8995a7;
+}
+
+.app-shell.dark-mode .content-panel .prediction-message,
+.app-shell.dark-mode .content-panel .evaluation-message,
+.app-shell.dark-mode .content-panel .current-conditions-time,
+.app-shell.dark-mode .content-panel .conditions-status,
+.app-shell.dark-mode .content-panel .conditions-loading,
+.app-shell.dark-mode .content-panel .current-conditions-coordinates,
+.app-shell.dark-mode .content-panel .prediction-result-label,
+.app-shell.dark-mode .content-panel .prediction-result-meta,
+.app-shell.dark-mode .content-panel .prediction-result-date,
+.app-shell.dark-mode .content-panel .prediction-shap-feature,
+.app-shell.dark-mode .content-panel .evaluation-metric span,
+.app-shell.dark-mode .content-panel .evaluation-chart-unit,
+.app-shell.dark-mode .content-panel .evaluation-legend-item,
+.app-shell.dark-mode .content-panel .information-pollutants li,
+.app-shell.dark-mode .content-panel .information-city-list li,
+.app-shell.dark-mode .content-panel .about-supervisor-number,
+.app-shell.dark-mode .content-panel .about-supervisor-role {
+  color: #c0cad8;
+}
+
+.app-shell.dark-mode .content-panel .prediction-shap-feature > span,
+.app-shell.dark-mode .content-panel .condition-label,
+.app-shell.dark-mode .content-panel .condition-value span,
+.app-shell.dark-mode .content-panel .current-conditions-meta-label,
+.app-shell.dark-mode .content-panel .evaluation-hour-ticks,
+.app-shell.dark-mode .content-panel .evaluation-data-note,
+.app-shell.dark-mode .content-panel .information-card-heading p {
+  color: #9aa7ba;
+}
+
+.app-shell.dark-mode .content-panel .conditions-loading strong,
+.app-shell.dark-mode .content-panel .information-pollutant-symbol,
+.app-shell.dark-mode .content-panel .information-city-list .information-icon {
+  color: #b8c3ff;
+}
+
+.app-shell.dark-mode .content-panel .prediction-message.error,
+.app-shell.dark-mode .content-panel .evaluation-message.error,
+.app-shell.dark-mode .content-panel .conditions-error {
+  color: #fca5a5;
+}
+
+.app-shell.dark-mode .content-panel .conditions-map-frame {
+  border-color: #364256;
+}
+
+.app-shell.dark-mode .content-panel .information-opening-badge,
+.app-shell.dark-mode .content-panel .about-avatar,
+.app-shell.dark-mode .content-panel .about-supervisor-avatar {
+  background-color: #293653;
+}
+
+.app-shell.dark-mode .sidebar .brand,
+.app-shell.dark-mode .sidebar .nav-item {
+  color: #d1d5db;
+}
+
+.app-shell.dark-mode .sidebar .nav-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.app-shell.dark-mode .sidebar .nav-item.active {
+  background: rgba(112, 127, 221, 0.2);
+  color: #aab6ff;
+}
+
+.theme-toggle {
+  display: flex;
+  width: 100%;
+  min-height: 40px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 550;
+  text-align: left;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: #e2e5eb;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid #707fdd;
+  outline-offset: 2px;
+}
+
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.app-shell.dark-mode .theme-toggle {
+  color: #d1d5db;
+}
+
+.app-shell.dark-mode .theme-toggle:hover {
+  border-color: #364256;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.sidebar-closed .sidebar-footer {
+  width: 100%;
+}
+
+.sidebar-closed .theme-toggle {
+  justify-content: center;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.sidebar-closed .theme-toggle span {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .sidebar-footer {
+    margin-top: 12px;
+    padding-top: 0;
+  }
+
+  .theme-toggle {
+    justify-content: center;
+  }
+
+  .sidebar-closed .sidebar-footer {
+    display: none;
+  }
+}
