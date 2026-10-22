@@ -60,7 +60,7 @@ def _build_model_registry():
                 registry[(location, pollutant, scenario)] = ModelConfig(
                     path=(
                         BASE_DIR
-                        / "model"
+                        / "model_tune"
                         / f"{model_prefix}_{location}_{scenario}.joblib"
                     ),
                     features=features,
