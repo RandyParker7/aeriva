@@ -21,6 +21,107 @@ function formatMetric(value, key) {
   return `${value.toFixed(3)}${key === 'mape' ? '%' : ''}`
 }
 
+function getEvaluationInsights(result) {
+  const scenarios = ['S1', 'S2']
+  const insights = []
+  const maeValues = Object.fromEntries(
+    scenarios.map((scenario) => [scenario, result.metrics[scenario].mae]),
+  )
+
+  if (scenarios.every((scenario) => Number.isFinite(maeValues[scenario]))) {
+    const [s1Mae, s2Mae] = [maeValues.S1, maeValues.S2]
+    if (s1Mae === s2Mae) {
+      insights.push({
+        title: 'Kesalahan rata-rata',
+        description: `MAE kedua skenario sama, yaitu ${s1Mae.toFixed(3)} dalam satuan ${result.pollutant}.`,
+      })
+    } else {
+      const betterScenario = s1Mae < s2Mae ? 'S1' : 'S2'
+      const otherScenario = betterScenario === 'S1' ? 'S2' : 'S1'
+      const improvement = maeValues[otherScenario] > 0
+        ? ((maeValues[otherScenario] - maeValues[betterScenario]) /
+            maeValues[otherScenario]) *
+          100
+        : null
+      insights.push({
+        title: `MAE lebih rendah pada ${betterScenario}`,
+        description: `Kesalahan absolut rata-rata ${betterScenario} sebesar ${maeValues[betterScenario].toFixed(3)}${improvement === null ? '' : `, sekitar ${improvement.toFixed(1)}% lebih rendah daripada ${otherScenario}`}.`,
+      })
+    }
+  }
+
+  const pointwiseCounts = { S1: 0, S2: 0, equal: 0 }
+  result.points.forEach((point) => {
+    const s1Error = Math.abs(point.actual - point.prediction_s1)
+    const s2Error = Math.abs(point.actual - point.prediction_s2)
+    if (!Number.isFinite(s1Error) || !Number.isFinite(s2Error)) {
+      return
+    }
+    if (Math.abs(s1Error - s2Error) < 1e-9) {
+      pointwiseCounts.equal += 1
+    } else {
+      pointwiseCounts[s1Error < s2Error ? 'S1' : 'S2'] += 1
+    }
+  })
+  if (pointwiseCounts.S1 + pointwiseCounts.S2 + pointwiseCounts.equal > 0) {
+    insights.push({
+      title: 'Kedekatan prediksi per jam',
+      description: `S1 lebih dekat ke data aktual pada ${pointwiseCounts.S1} jam, S2 pada ${pointwiseCounts.S2} jam${pointwiseCounts.equal ? `, dan sama dekat pada ${pointwiseCounts.equal} jam` : ''}.`,
+    })
+  }
+
+  const averageErrors = Object.fromEntries(
+    scenarios.map((scenario) => {
+      const values = result.points
+        .map((point) => point[`prediction_${scenario.toLowerCase()}`] - point.actual)
+        .filter(Number.isFinite)
+      return [
+        scenario,
+        values.length
+          ? values.reduce((total, value) => total + value, 0) / values.length
+          : null,
+      ]
+    }),
+  )
+  if (scenarios.some((scenario) => Number.isFinite(averageErrors[scenario]))) {
+    const biasDescription = scenarios
+      .filter((scenario) => Number.isFinite(averageErrors[scenario]))
+      .map((scenario) => {
+        const bias = averageErrors[scenario]
+        const tendency = Math.abs(bias) < 0.0005
+          ? 'mendekati seimbang'
+          : bias > 0
+            ? 'cenderung melebihkan'
+            : 'cenderung merendahkan'
+        return `${scenario} ${tendency} sebesar ${Math.abs(bias).toFixed(3)}`
+      })
+      .join('; ')
+    insights.push({
+      title: 'Arah kesalahan prediksi',
+      description: `Rata-rata selisih prediksi dan aktual: ${biasDescription} dalam satuan ${result.pollutant}.`,
+    })
+  }
+
+  const r2Values = Object.fromEntries(
+    scenarios.map((scenario) => [scenario, result.metrics[scenario].r2]),
+  )
+  if (scenarios.every((scenario) => Number.isFinite(r2Values[scenario]))) {
+    const betterScenario = r2Values.S1 === r2Values.S2
+      ? null
+      : r2Values.S1 > r2Values.S2
+        ? 'S1'
+        : 'S2'
+    insights.push({
+      title: 'Kesesuaian pola data',
+      description: betterScenario
+        ? `R² ${betterScenario} lebih tinggi (${r2Values[betterScenario].toFixed(3)}), sehingga lebih baik dalam menggambarkan variasi data aktual pada periode ini.${r2Values[betterScenario] < 0 ? ' Namun, nilai R² negatif menandakan performanya lebih buruk daripada pembanding rata-rata aktual.' : ''}`
+        : `Nilai R² kedua skenario sama (${r2Values.S1.toFixed(3)}).`,
+    })
+  }
+
+  return insights
+}
+
 function EvaluationChart({ points, pollutant }) {
   const [hoveredPoint, setHoveredPoint] = useState(null)
   const width = 800
@@ -225,8 +326,6 @@ function EvaluationPage() {
         }
 
         setOptions(data)
-        setLocation(data.locations?.[0] || '')
-        setPollutant(data.pollutants?.[0] || '')
       } catch (error) {
         if (error.name !== 'AbortError') {
           setOptionsError(error.message)
@@ -287,7 +386,7 @@ function EvaluationPage() {
       <header className="evaluation-page-header">
         <h1>Evaluation</h1>
         <p>
-          Bandingkan performa model S1 dan S2 dengan data aktual pada 24 jam
+          Bandingkan performa model Skenario 1 dan Skenario 2 dengan data aktual pada 24 jam
           hingga waktu yang dipilih.
         </p>
       </header>
@@ -300,6 +399,16 @@ function EvaluationPage() {
           </div>
         </div>
         <form className="evaluation-form" onSubmit={handleEvaluation}>
+          <label className="evaluation-field" htmlFor="evaluation-date">
+            <span>Tanggal evaluasi</span>
+            <input
+              id="evaluation-date"
+              type="date"
+              required
+              value={evaluationDate}
+              onChange={(event) => setEvaluationDate(event.target.value)}
+            />
+          </label>
           <label className="evaluation-field" htmlFor="evaluation-location">
             <span>Kota</span>
             <select
@@ -330,16 +439,7 @@ function EvaluationPage() {
               ))}
             </select>
           </label>
-          <label className="evaluation-field" htmlFor="evaluation-date">
-            <span>Tanggal evaluasi</span>
-            <input
-              id="evaluation-date"
-              type="date"
-              required
-              value={evaluationDate}
-              onChange={(event) => setEvaluationDate(event.target.value)}
-            />
-          </label>
+          
 
           <div className="evaluation-hour">
             <div className="evaluation-hour-heading">
@@ -446,6 +546,22 @@ function EvaluationPage() {
             points={evaluationResult.points}
             pollutant={evaluationResult.pollutant}
           />
+          <section className="evaluation-insights" aria-labelledby="evaluation-insights-title">
+            <div className="evaluation-section-heading">
+              <div>
+                <h2 id="evaluation-insights-title">Insight hasil evaluasi</h2>
+                <p>Ringkasan otomatis berdasarkan hasil kedua skenario pada periode ini.</p>
+              </div>
+            </div>
+            <div className="evaluation-insight-grid">
+              {getEvaluationInsights(evaluationResult).map((insight) => (
+                <article className="evaluation-insight-card" key={insight.title}>
+                  <h3>{insight.title}</h3>
+                  <p>{insight.description}</p>
+                </article>
+              ))}
+            </div>
+          </section>
           <p className="evaluation-data-note">
             Data aktual diambil dari arsip kualitas udara Open-Meteo. MAPE
             dihitung dari titik dengan nilai aktual bukan nol.

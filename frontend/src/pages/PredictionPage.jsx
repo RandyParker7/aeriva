@@ -698,7 +698,7 @@ function PredictionPage() {
             </p>
           )}
           <p className="current-conditions-source">
-            Sumber: Open-Meteo · WIB · otomatis diperbarui setiap 15 menit
+            Sumber: Open-Meteo API
           </p>
         </aside>
       </div>

@@ -51,7 +51,7 @@
 .evaluation-form {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  gap: 20px 18px;
   margin-top: 20px;
 }
 
@@ -76,6 +76,14 @@
   color: #273240;
   font-size: 14px;
   font-weight: 400;
+}
+
+.evaluation-field select {
+  padding-right: 36px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='m1 1 5 5 5-5' fill='none' stroke='%23667085' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
 }
 
 .evaluation-field input:focus,
@@ -226,6 +234,41 @@
 
 .evaluation-chart-card {
   min-width: 0;
+}
+
+.evaluation-insights {
+  padding: 22px;
+  border: 1px solid #e5e8ef;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(32, 45, 75, 0.04);
+}
+
+.evaluation-insight-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.evaluation-insight-card {
+  padding: 15px;
+  border: 1px solid #e8ebf1;
+  border-radius: 10px;
+  background: #f8f9fc;
+}
+
+.evaluation-insight-card h3 {
+  color: #3449ad;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.evaluation-insight-card p {
+  margin-top: 6px;
+  color: #596579;
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .evaluation-chart-unit {
@@ -390,12 +433,14 @@
 @media (max-width: 540px) {
   .evaluation-module,
   .evaluation-scenario-card,
-  .evaluation-chart-card {
+  .evaluation-chart-card,
+  .evaluation-insights {
     padding: 17px;
   }
 
   .evaluation-form,
-  .evaluation-metrics {
+  .evaluation-metrics,
+  .evaluation-insight-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
