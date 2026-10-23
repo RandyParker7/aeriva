@@ -6,4 +6,6 @@ joblib
 numpy
 pandas
 scikit-learn
-openmeteo_requests
+openmeteo-requests
+requests-cache
+retry-requests
