@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 import openmeteo_requests
-import requests_cache
+import requests
 from retry_requests import retry
 import math
 from pydantic import BaseModel
@@ -22,13 +22,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
-cache_session = requests_cache.CachedSession(
-    ".cache",
-    expire_after=900
-)
+# cache_session = requests_cache.CachedSession(
+#     ".cache",
+#     expire_after=900
+# )
 
 retry_session = retry(
-    cache_session,
+    requests.Session(),
     retries=5,
     backoff_factor=0.2
 )
