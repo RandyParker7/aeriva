@@ -61,6 +61,12 @@
   color: #d1d5db;
 }
 
+.app-shell.dark-mode .evaluation-insights {
+  border-color: #303b4d;
+  background: #1b2636;
+  box-shadow: 0 8px 24px rgba(32, 12, 12, 0.16);
+}
+
 .app-shell.dark-mode .content-panel h1,
 .app-shell.dark-mode .content-panel h2,
 .app-shell.dark-mode .content-panel h3,
@@ -225,6 +231,7 @@
 .app-shell.dark-mode .content-panel .prediction-result-label,
 .app-shell.dark-mode .content-panel .prediction-result-meta,
 .app-shell.dark-mode .content-panel .prediction-result-date,
+.aoo-shell.dark-mode .content-panel .prediction-previous-hour,
 .app-shell.dark-mode .content-panel .prediction-shap-feature,
 .app-shell.dark-mode .content-panel .evaluation-metric span,
 .app-shell.dark-mode .content-panel .evaluation-chart-unit,

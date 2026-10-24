@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   formatUtcDateTimeInWib,
   formatUtcTimeInWib,
@@ -311,6 +311,7 @@ function EvaluationPage() {
   const [optionsError, setOptionsError] = useState('')
   const [evaluationError, setEvaluationError] = useState('')
   const [evaluationResult, setEvaluationResult] = useState(null)
+  const evaluationResultsRef = useRef(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -349,6 +350,15 @@ function EvaluationPage() {
         item.scenario === scenario,
     ),
   )
+  
+  useEffect(() => {
+    if (evaluationResult) {
+      evaluationResultsRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    }
+  }, [evaluationResult])
 
   async function handleEvaluation(event) {
     event.preventDefault()
@@ -398,6 +408,7 @@ function EvaluationPage() {
             <p>Pilih kota, polutan, tanggal, dan jam akhir evaluasi.</p>
           </div>
         </div>
+
         <form className="evaluation-form" onSubmit={handleEvaluation}>
           <label className="evaluation-field" htmlFor="evaluation-date">
             <span>Tanggal evaluasi</span>
@@ -508,7 +519,7 @@ function EvaluationPage() {
       </section>
 
       {evaluationResult && (
-        <div className="evaluation-results" aria-live="polite">
+        <div className="evaluation-results" aria-live="polite" ref={evaluationResultsRef}>
           <div className="evaluation-results-heading">
             <div>
               <h2>Hasil evaluasi</h2>
@@ -562,10 +573,6 @@ function EvaluationPage() {
               ))}
             </div>
           </section>
-          <p className="evaluation-data-note">
-            Data aktual diambil dari arsip kualitas udara Open-Meteo. MAPE
-            dihitung dari titik dengan nilai aktual bukan nol.
-          </p>
         </div>
       )}
     </section>
