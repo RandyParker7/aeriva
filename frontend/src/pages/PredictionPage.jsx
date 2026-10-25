@@ -120,6 +120,7 @@ function PredictionPage() {
   const [isLoadingConditions, setIsLoadingConditions] = useState(false)
   const [conditionsRefresh, setConditionsRefresh] = useState(0)
   const conditionsMapRef = useRef(null)
+  const predictionResultsRef = useRef(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -327,6 +328,15 @@ function PredictionPage() {
     },
   ]
 
+  useEffect(() => {
+    if (predictionResult){
+      predictionResultsRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    }
+  }, [predictionResult])
+
   async function handlePrediction(event) {
     event.preventDefault()
     setIsPredicting(true)
@@ -530,7 +540,7 @@ function PredictionPage() {
               </p>
             )}
             {predictionResult && (
-              <div className="prediction-results" aria-live="polite">
+              <div className="prediction-results" aria-live="polite" ref={predictionResultsRef}>
                 <section className="prediction-previous-hour">
                   <h2>Data {predictionResult.pollutant} 1 Jam Sebelumnya</h2>
                   <strong>
