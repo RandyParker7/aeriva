@@ -6,7 +6,7 @@ import {
 } from '../utils/time'
 import './PredictionPage.css'
 
-const CONDITIONS_REFRESH_INTERVAL = 15 * 60 * 1000
+const CONDITIONS_REFRESH_INTERVAL = 30 * 60 * 1000
 
 const scenarios = [
   {
