@@ -143,6 +143,19 @@
   background: linear-gradient(112deg, #202b40 0%, #1b2636 82%);
 }
 
+.app-shell.dark-mode .content-panel .information-manual {
+  border-color: #303b4d;
+  background: linear-gradient(112deg, #202b40 0%, #1b2636 82%);
+}
+
+.app-shell.dark-mode .content-panel .information-manual-copy h2 {
+  color: #e6eaf2;
+}
+
+.app-shell.dark-mode .content-panel .information-manual-copy p {
+  color: #a4afc0;
+}
+
 .app-shell.dark-mode .content-panel .information-tutorial-step {
   border-color: #303b4d;
   background-color: #1b2636;

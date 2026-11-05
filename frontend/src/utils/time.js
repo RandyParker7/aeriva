@@ -26,6 +26,15 @@ function getIndonesiaDateTimeParts(timestamp) {
   return Object.fromEntries(parts.map(({ type, value }) => [type, value]))
 }
 
+export function getWibDateTimeParts(timestamp) {
+  const { year, month, day, hour } = getIndonesiaDateTimeParts(timestamp)
+
+  return {
+    date: `${year}-${month}-${day}`,
+    hour: Number(hour),
+  }
+}
+
 export function formatUtcDateTimeInWib(timestamp) {
   const { day, month, year, hour, minute } =
     getIndonesiaDateTimeParts(timestamp)

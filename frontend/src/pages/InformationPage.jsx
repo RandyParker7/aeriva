@@ -70,6 +70,12 @@ function InformationIcon({ name }) {
         <path d="M16 7h3v3" />
       </>
     ),
+    download: (
+      <>
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <path d="m7 10 5 5 5-5M12 15V3" />
+      </>
+    ),
   }
 
   return (
@@ -270,6 +276,26 @@ function InformationPage() {
               </div>
             </li>
           </ol>
+        </section>
+
+        <section className="information-manual" aria-labelledby="manual-title">
+          <div className="information-manual-copy">
+            <span className="information-eyebrow">Dokumentasi</span>
+            <h2 id="manual-title">Manual Book AERIVA</h2>
+            <p>
+              Unduh panduan lengkap untuk mempelajari fitur dan cara
+              menggunakan AERIVA.
+            </p>
+          </div>
+          <a
+            className="information-manual-download"
+            href="/file/MANUAL BOOK - AERIVA.pdf"
+            download="MANUAL BOOK - AERIVA.pdf"
+          >
+            <InformationIcon name="download" />
+            <span>Unduh Manual Book</span>
+            <span className="information-manual-format">PDF</span>
+          </a>
         </section>
       </section>
     </main>

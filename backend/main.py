@@ -3,12 +3,14 @@ import openmeteo_requests
 import requests
 from retry_requests import retry
 import math
+from functools import lru_cache
 from pydantic import BaseModel
 from datetime import datetime, timedelta, timezone
 from prediction import (
     get_model_config,
     get_available_predictions,
     predict_model_with_explanation,
+    MODEL_REGISTRY,
     POLLUTANT_VARIABLES as pollutants,
     METEOROLOGICAL_VARIABLES,
     SCENARIOS as scenarios,
@@ -73,6 +75,90 @@ def health_check():
         "status": "ok"
     }
 
+@lru_cache(maxsize=None)
+def get_earliest_pollutant_data_time(location, pollutant_variable):
+    latitude = locations[location]["latitude"]
+    longitude = locations[location]["longitude"]
+    response = openmeteo.weather_api(
+        "https://air-quality-api.open-meteo.com/v1/air-quality",
+        params={
+            "latitude": latitude,
+            "longitude": longitude,
+            "hourly": [pollutant_variable],
+            "timezone": "UTC",
+            "start_date": "2022-08-01",
+            "end_date": "2022-08-15",
+        },
+    )[0]
+    hourly = response.Hourly()
+    values = hourly.Variables(0).ValuesAsNumpy()
+    first_available_index = next(
+        (
+            index
+            for index, value in enumerate(values)
+            if math.isfinite(float(value))
+        ),
+        None,
+    )
+    if first_available_index is None:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Data historis polutan belum tersedia dari Open-Meteo "
+                f"untuk {location} ({pollutant_variable})."
+            ),
+        )
+    return datetime.fromtimestamp(
+        hourly.Time() + first_available_index * hourly.Interval(),
+        tz=timezone.utc,
+    )
+
+
+def get_pollutant_data_time_range(
+    location="Surabaya",
+    pollutant_variable="pm2_5",
+):
+    latitude = locations[location]["latitude"]
+    longitude = locations[location]["longitude"]
+    response = openmeteo.weather_api(
+        "https://air-quality-api.open-meteo.com/v1/air-quality",
+        params={
+            "latitude": latitude,
+            "longitude": longitude,
+            "hourly": [pollutant_variable],
+            "timezone": "UTC",
+            "past_days": 5,
+        },
+    )[0]
+    hourly = response.Hourly()
+    return (
+        get_earliest_pollutant_data_time(location, pollutant_variable),
+        datetime.fromtimestamp(
+            hourly.TimeEnd() - hourly.Interval(),
+            tz=timezone.utc,
+        ),
+    )
+
+
+def get_prediction_time_range():
+    earliest_data_time, latest_data_time = get_pollutant_data_time_range()
+    pollutant_variables = set(pollutants.values())
+    pollutant_lags = [
+        lag
+        for config in MODEL_REGISTRY.values()
+        for variable, lag in config.features.values()
+        if variable in pollutant_variables
+    ]
+    return {
+        "min": (
+            earliest_data_time + timedelta(hours=max(pollutant_lags))
+        ).isoformat(),
+        "max": (
+            latest_data_time + timedelta(hours=min(pollutant_lags))
+        ).isoformat(),
+    }
+
+
 @app.get("/prediction-options")
 def prediction_options():
     return {
@@ -80,7 +166,8 @@ def prediction_options():
         "location_coordinates": locations,
         "pollutants": list(pollutants.keys()),
         "scenarios": scenarios,
-        "available_predictions": get_available_predictions()
+        "available_predictions": get_available_predictions(),
+        "prediction_time_range": get_prediction_time_range(),
     }
 
 def clean_values(values):
@@ -274,15 +361,26 @@ def predict(request: PredictionRequest):
         min_pollutant_lag = min(pollutant_lags)
         time_start = prediction_time - timedelta(hours=max_pollutant_lag)
         time_end = prediction_time - timedelta(hours=min_pollutant_lag)
-        latest_supported_date = (
-            datetime.now(timezone.utc).date() + timedelta(days=5)
+        earliest_supported_time, latest_supported_time = (
+            get_pollutant_data_time_range(
+                request.location,
+                pollutants[request.pollutant],
+            )
         )
-        if time_end.date() > latest_supported_date:
+        if time_start < earliest_supported_time:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Data polutan untuk prediksi hanya tersedia mulai "
+                    f"{earliest_supported_time.date().isoformat()}"
+                )
+            )
+        if time_end > latest_supported_time:
             raise HTTPException(
                 status_code=400,
                 detail=(
                     "Data polutan untuk prediksi hanya tersedia hingga "
-                    f"{latest_supported_date.isoformat()}"
+                    f"{latest_supported_time.date().isoformat()}"
                 )
             )
         pollutant_variables = list(dict.fromkeys(

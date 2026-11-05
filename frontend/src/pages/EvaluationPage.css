@@ -315,33 +315,35 @@
 }
 
 .evaluation-line-actual {
-  stroke: #52677f;
+  stroke: #f97316;
+  stroke-dasharray: 1 6;
+  stroke-linecap: round;
 }
 
 .evaluation-line-s1 {
-  stroke: #b27c55;
+  stroke: #2563eb;
 }
 
 .evaluation-line-s2 {
-  stroke: #6d9180;
+  stroke: #dc2626;
+  stroke-dasharray: 8 5;
 }
 
 .evaluation-hourly-points circle {
   stroke: #ffffff;
   stroke-width: 1;
-  transition: r 120ms ease, stroke-width 120ms ease;
 }
 
 .evaluation-hourly-points.evaluation-line-actual circle {
-  fill: #52677f;
+  fill: #f97316;
 }
 
 .evaluation-hourly-points.evaluation-line-s1 circle {
-  fill: #b27c55;
+  fill: #2563eb;
 }
 
 .evaluation-hourly-points.evaluation-line-s2 circle {
-  fill: #6d9180;
+  fill: #dc2626;
 }
 
 .evaluation-chart-hover > circle {
@@ -351,15 +353,15 @@
 }
 
 .evaluation-chart-hover > circle.evaluation-line-actual {
-  stroke: #52677f;
+  stroke: #f97316;
 }
 
 .evaluation-chart-hover > circle.evaluation-line-s1 {
-  stroke: #b27c55;
+  stroke: #2563eb;
 }
 
 .evaluation-chart-hover > circle.evaluation-line-s2 {
-  stroke: #6d9180;
+  stroke: #dc2626;
 }
 
 .evaluation-chart-hover rect {
@@ -399,20 +401,22 @@
 
 .evaluation-legend-swatch {
   width: 18px;
-  height: 3px;
-  border-radius: 2px;
+  height: 0;
+  border-top: 2.5px solid;
 }
 
 .evaluation-legend-swatch.evaluation-line-actual {
-  background: #52677f;
+  border-top-color: #f97316;
+  border-top-style: dotted;
 }
 
 .evaluation-legend-swatch.evaluation-line-s1 {
-  background: #b27c55;
+  border-top-color: #2563eb;
 }
 
 .evaluation-legend-swatch.evaluation-line-s2 {
-  background: #6d9180;
+  border-top-color: #dc2626;
+  border-top-style: dashed;
 }
 
 .evaluation-data-note {

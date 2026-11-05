@@ -2,11 +2,25 @@ import { useEffect, useRef, useState } from 'react'
 import {
   formatUtcDateInWib,
   formatUtcTimeInWib,
+  getWibDateTimeParts,
   wibDateTimeToUtcIso,
 } from '../utils/time'
 import './PredictionPage.css'
 
 const CONDITIONS_REFRESH_INTERVAL = 30 * 60 * 1000
+
+function getPredictionHourBounds(date, timeRange) {
+  if (!date || !timeRange) {
+    return { min: 0, max: 23 }
+  }
+
+  const minDateTime = getWibDateTimeParts(timeRange.min)
+  const maxDateTime = getWibDateTimeParts(timeRange.max)
+  return {
+    min: date === minDateTime.date ? minDateTime.hour : 0,
+    max: date === maxDateTime.date ? maxDateTime.hour : 23,
+  }
+}
 
 const scenarios = [
   {
@@ -121,6 +135,11 @@ function PredictionPage() {
   const [conditionsRefresh, setConditionsRefresh] = useState(0)
   const conditionsMapRef = useRef(null)
   const predictionResultsRef = useRef(null)
+  const predictionTimeRange = options?.prediction_time_range
+  const predictionHourBounds = getPredictionHourBounds(
+    predictionDate,
+    predictionTimeRange,
+  )
 
   useEffect(() => {
     const controller = new AbortController()
@@ -242,7 +261,7 @@ function PredictionPage() {
         ]
         map = new leaflet.Map(conditionsMapRef.current, {
           center,
-          zoom: 7,
+          zoom: 8,
           scrollWheelZoom: false,
           doubleClickZoom: false,
         })
@@ -344,6 +363,18 @@ function PredictionPage() {
     setPredictionResult(null)
 
     try {
+      const predictionTime = wibDateTimeToUtcIso(
+        predictionDate,
+        predictionHour,
+      )
+      if (
+        !predictionTimeRange ||
+        Date.parse(predictionTime) < Date.parse(predictionTimeRange.min) ||
+        Date.parse(predictionTime) > Date.parse(predictionTimeRange.max)
+      ) {
+        throw new Error('Waktu prediksi berada di luar rentang data yang tersedia.')
+      }
+
       const response = await fetch('/api/prediction', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -351,10 +382,7 @@ function PredictionPage() {
           location,
           pollutant,
           scenario: selectedScenario,
-          prediction_time: wibDateTimeToUtcIso(
-            predictionDate,
-            predictionHour,
-          ),
+          prediction_time: predictionTime,
         }),
       })
       const data = await response.json()
@@ -435,8 +463,25 @@ function PredictionPage() {
                   id="prediction-date"
                   type="date"
                   required
+                  min={predictionTimeRange
+                    ? getWibDateTimeParts(predictionTimeRange.min).date
+                    : undefined}
+                  max={predictionTimeRange
+                    ? getWibDateTimeParts(predictionTimeRange.max).date
+                    : undefined}
+                  disabled={isLoadingOptions || Boolean(optionsError)}
                   value={predictionDate}
-                  onChange={(event) => setPredictionDate(event.target.value)}
+                  onChange={(event) => {
+                    const nextDate = event.target.value
+                    const nextBounds = getPredictionHourBounds(
+                      nextDate,
+                      predictionTimeRange,
+                    )
+                    setPredictionDate(nextDate)
+                    setPredictionHour((hour) =>
+                      Math.min(nextBounds.max, Math.max(nextBounds.min, hour)),
+                    )
+                  }}
                 />
               </label>
 
@@ -484,8 +529,8 @@ function PredictionPage() {
                 <input
                   id="prediction-hour"
                   type="range"
-                  min="0"
-                  max="23"
+                  min={predictionHourBounds.min}
+                  max={predictionHourBounds.max}
                   step="1"
                   value={predictionHour}
                   aria-valuetext={`${String(predictionHour).padStart(2, '0')}:00`}
@@ -510,6 +555,7 @@ function PredictionPage() {
                 disabled={
                   isPredicting ||
                   Boolean(optionsError) ||
+                  !predictionTimeRange ||
                   !predictionDate ||
                   !location ||
                   !pollutant ||

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   formatUtcDateTimeInWib,
   formatUtcTimeInWib,
+  getWibDateTimeParts,
   wibDateTimeToUtcIso,
 } from '../utils/time'
 import './EvaluationPage.css'
@@ -306,12 +307,25 @@ function EvaluationPage() {
   const [pollutant, setPollutant] = useState('')
   const [evaluationDate, setEvaluationDate] = useState('')
   const [evaluationHour, setEvaluationHour] = useState(12)
+  const [currentTime, setCurrentTime] = useState(() => new Date())
   const [isLoadingOptions, setIsLoadingOptions] = useState(true)
   const [isEvaluating, setIsEvaluating] = useState(false)
   const [optionsError, setOptionsError] = useState('')
   const [evaluationError, setEvaluationError] = useState('')
   const [evaluationResult, setEvaluationResult] = useState(null)
   const evaluationResultsRef = useRef(null)
+  const currentWib = getWibDateTimeParts(currentTime.toISOString())
+  const evaluationHourMax = evaluationDate === currentWib.date
+    ? currentWib.hour
+    : 23
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentTime(new Date())
+    }, 60_000)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -416,8 +430,17 @@ function EvaluationPage() {
               id="evaluation-date"
               type="date"
               required
+              max={currentWib.date}
               value={evaluationDate}
-              onChange={(event) => setEvaluationDate(event.target.value)}
+              onChange={(event) => {
+                const nextDate = event.target.value
+                setEvaluationDate(nextDate)
+                if (nextDate === currentWib.date) {
+                  setEvaluationHour((hour) =>
+                    Math.min(hour, currentWib.hour),
+                  )
+                }
+              }}
             />
           </label>
           <label className="evaluation-field" htmlFor="evaluation-location">
@@ -463,7 +486,7 @@ function EvaluationPage() {
               id="evaluation-hour"
               type="range"
               min="0"
-              max="23"
+              max={evaluationHourMax}
               step="1"
               value={evaluationHour}
               aria-valuetext={`${String(evaluationHour).padStart(2, '0')}:00`}
@@ -489,6 +512,8 @@ function EvaluationPage() {
                 !location ||
                 !pollutant ||
                 !evaluationDate ||
+                evaluationDate > currentWib.date ||
+                evaluationHour > evaluationHourMax ||
                 !isCombinationAvailable
               }
             >
