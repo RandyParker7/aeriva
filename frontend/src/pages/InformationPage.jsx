@@ -1,11 +1,37 @@
+import { useEffect, useState } from 'react'
 import './InformationPage.css'
 
 const pollutants = [
-  { symbol: 'PM2.5', name: 'Partikulat halus' },
-  { symbol: 'CO', name: 'Karbon monoksida' },
-  { symbol: 'NO₂', name: 'Nitrogen dioksida' },
-  { symbol: 'SO₂', name: 'Sulfur dioksida' },
-  { symbol: 'O₃', name: 'Ozon' },
+  {
+    symbol: 'PM2.5',
+    name: 'Partikulat halus',
+    description:
+      'Partikel halus di udara dengan diameter 2,5 mikrometer atau lebih kecil yang dapat masuk hingga ke paru-paru dan berisiko mengganggu kesehatan pernapasan.',
+  },
+  {
+    symbol: 'CO',
+    name: 'Karbon monoksida',
+    description:
+      'Gas tidak berwarna dan tidak berbau yang dihasilkan dari pembakaran tidak sempurna bahan bakar. Paparan dalam jumlah tinggi dapat mengurangi kemampuan darah membawa oksigen.',
+  },
+  {
+    symbol: 'NO₂',
+    name: 'Nitrogen dioksida',
+    description:
+      'Gas polutan yang umumnya dihasilkan dari pembakaran bahan bakar, terutama kendaraan bermotor dan aktivitas industri. Paparannya dapat menyebabkan iritasi saluran pernapasan.',
+  },
+  {
+    symbol: 'SO₂',
+    name: 'Sulfur dioksida',
+    description:
+      'Gas yang dihasilkan dari pembakaran bahan bakar yang mengandung sulfur, seperti batu bara dan minyak bumi. Gas ini dapat menyebabkan iritasi pada saluran pernapasan.',
+  },
+  {
+    symbol: 'O₃',
+    name: 'Ozon',
+    description:
+      'Ozon di permukaan tanah yang terbentuk melalui reaksi kimia antara polutan dan sinar matahari. Konsentrasi tinggi dapat menyebabkan gangguan pernapasan dan iritasi paru-paru.',
+  },
 ]
 
 const cities = ['Surabaya', 'Pasuruan', 'Malang', 'Kediri', 'Jember']
@@ -96,6 +122,21 @@ function InformationIcon({ name }) {
 }
 
 function InformationPage() {
+  const [selectedPollutant, setSelectedPollutant] = useState(null)
+
+  useEffect(() => {
+    if (!selectedPollutant) return undefined
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setSelectedPollutant(null)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [selectedPollutant])
+
   return (
     <main className="page-content information-page">
       <header className="information-page-header">
@@ -145,6 +186,14 @@ function InformationPage() {
                     {pollutant.symbol}
                   </span>
                   <span>{pollutant.name}</span>
+                  <button
+                    className="information-pollutant-info"
+                    type="button"
+                    aria-label={`Informasi tentang ${pollutant.name}`}
+                    onClick={() => setSelectedPollutant(pollutant)}
+                  >
+                    ?
+                  </button>
                 </li>
               ))}
             </ul>
@@ -298,6 +347,41 @@ function InformationPage() {
           </a>
         </section>
       </section>
+      {selectedPollutant && (
+        <div
+          className="information-pollutant-modal-backdrop"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setSelectedPollutant(null)
+            }
+          }}
+        >
+          <section
+            className="information-pollutant-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pollutant-modal-title"
+            aria-describedby="pollutant-modal-description"
+          >
+            <button
+              className="information-pollutant-modal-close"
+              type="button"
+              aria-label="Tutup informasi"
+              autoFocus
+              onClick={() => setSelectedPollutant(null)}
+            >
+              ×
+            </button>
+            <span className="information-pollutant-symbol">
+              {selectedPollutant.symbol}
+            </span>
+            <h2 id="pollutant-modal-title">{selectedPollutant.name}</h2>
+            <p id="pollutant-modal-description">
+              {selectedPollutant.description}
+            </p>
+          </section>
+        </div>
+      )}
     </main>
   )
 }

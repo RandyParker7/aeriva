@@ -143,6 +143,38 @@
   background: linear-gradient(112deg, #202b40 0%, #1b2636 82%);
 }
 
+.app-shell.dark-mode .content-panel .information-pollutant-modal {
+  border-color: #364256;
+  background: #1b2636;
+}
+
+.app-shell.dark-mode .content-panel .information-pollutant-modal h2 {
+  color: #e6eaf2;
+}
+
+.app-shell.dark-mode .content-panel .information-pollutant-modal p {
+  color: #c0cad8;
+}
+
+.app-shell.dark-mode .content-panel .information-pollutant-info {
+  border-color: #364256;
+  background: #222e40;
+  color: #b8c3ff;
+}
+
+.app-shell.dark-mode .content-panel .information-pollutant-info:hover {
+  background: #303d55;
+}
+
+.app-shell.dark-mode .content-panel .information-pollutant-modal-close {
+  color: #c0cad8;
+}
+
+.app-shell.dark-mode .content-panel .information-pollutant-modal-close:hover {
+  background: #303d55;
+  color: #e6eaf2;
+}
+
 .app-shell.dark-mode .content-panel .information-manual {
   border-color: #303b4d;
   background: linear-gradient(112deg, #202b40 0%, #1b2636 82%);
