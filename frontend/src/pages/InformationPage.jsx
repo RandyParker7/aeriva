@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { getPollutantUnit } from '../utils/pollutants'
 import './InformationPage.css'
 
 const pollutants = [
@@ -15,19 +16,19 @@ const pollutants = [
       'Gas tidak berwarna dan tidak berbau yang dihasilkan dari pembakaran tidak sempurna bahan bakar. Paparan dalam jumlah tinggi dapat mengurangi kemampuan darah membawa oksigen.',
   },
   {
-    symbol: 'NO₂',
+    symbol: 'NO2',
     name: 'Nitrogen dioksida',
     description:
       'Gas polutan yang umumnya dihasilkan dari pembakaran bahan bakar, terutama kendaraan bermotor dan aktivitas industri. Paparannya dapat menyebabkan iritasi saluran pernapasan.',
   },
   {
-    symbol: 'SO₂',
+    symbol: 'SO2',
     name: 'Sulfur dioksida',
     description:
       'Gas yang dihasilkan dari pembakaran bahan bakar yang mengandung sulfur, seperti batu bara dan minyak bumi. Gas ini dapat menyebabkan iritasi pada saluran pernapasan.',
   },
   {
-    symbol: 'O₃',
+    symbol: 'O3',
     name: 'Ozon',
     description:
       'Ozon di permukaan tanah yang terbentuk melalui reaksi kimia antara polutan dan sinar matahari. Konsentrasi tinggi dapat menyebabkan gangguan pernapasan dan iritasi paru-paru.',
@@ -41,15 +42,30 @@ const scenarios = [
     icon: 'history',
     name: 'Skenario 1',
     description:
-      'Menggunakan nilai historis polutan yang diprediksi pada tiga waktu sebelumnya',
-    type: 'Polutan',
+      'Menggunakan riwayat konsentrasi polutan yang dipilih sebagai input model.',
+    type: '3 fitur input',
+    features: [
+      'Konsentrasi polutan 1 jam sebelumnya',
+      'Konsentrasi polutan 2 jam sebelumnya',
+      'Konsentrasi polutan 3 jam sebelumnya',
+    ],
+    note:
+      'Skenario ini melihat pola perubahan polutan dari riwayat konsentrasinya.',
   },
   {
     icon: 'weather',
     name: 'Skenario 2',
     description:
-      'Menggunakan nilai historis polutan dan kondisi meteorologi pada tiga waktu sebelumnya.',
-    type: 'Polutan + meteorologi',
+      'Menggabungkan riwayat polutan dengan kondisi cuaca pada waktu yang sama.',
+    type: '21 fitur input',
+    features: [
+      '3 nilai historis polutan: 1, 2, dan 3 jam sebelumnya',
+      'Suhu, kelembapan, curah hujan, dan tekanan udara',
+      'Kecepatan serta arah angin',
+      'Setiap variabel cuaca menggunakan riwayat 1, 2, dan 3 jam',
+    ],
+    note:
+      'Skenario ini menambahkan konteks meteorologi; hasilnya tidak selalu lebih akurat.',
   },
 ]
 
@@ -185,7 +201,14 @@ function InformationPage() {
                   <span className="information-pollutant-symbol">
                     {pollutant.symbol}
                   </span>
-                  <span>{pollutant.name}</span>
+                  <span className="information-pollutant-description">
+                    <span className="information-pollutant-name">
+                      {pollutant.name}
+                    </span>
+                    <span className="information-pollutant-unit">
+                      {getPollutantUnit(pollutant.symbol)}
+                    </span>
+                  </span>
                   <button
                     className="information-pollutant-info"
                     type="button"
@@ -238,6 +261,12 @@ function InformationPage() {
                 </div>
                 <h3>{scenario.name}</h3>
                 <p>{scenario.description}</p>
+                <ul className="information-scenario-features">
+                  {scenario.features.map((feature) => (
+                    <li key={feature}>{feature}</li>
+                  ))}
+                </ul>
+                <p className="information-scenario-note">{scenario.note}</p>
               </article>
             ))}
           </div>
@@ -285,9 +314,9 @@ function InformationPage() {
               <div>
                 <h3>Buka Halaman Prediction</h3>
                 <p>
-                  Pilih skenario, kota, dan polutan yang ingin diprediksi.
-                  Skenario 1 memakai riwayat polutan; Skenario 2 juga memakai
-                  data meteorologi.
+                  Pilih kota dan polutan. AERIVA menjalankan prediksi satu jam
+                  ke depan dengan model final yang ditetapkan untuk kombinasi
+                  tersebut.
                 </p>
               </div>
             </li>
@@ -296,9 +325,10 @@ function InformationPage() {
               <div>
                 <h3>Tentukan waktu prediksi</h3>
                 <p>
-                  Pilih tanggal dan jam prediksi, lalu tekan
-                  <strong> Prediksi</strong>. Hasil menampilkan estimasi
-                  konsentrasi polutan pada waktu tersebut.
+                  Untuk memilih skenario, tanggal, dan jam secara manual, buka
+                  halaman <strong>Interpretation</strong>, lalu tekan
+                  <strong> Jalankan prediksi</strong>. Di sana, Skenario 1 dan
+                  Skenario 2 dapat dicoba secara terpisah.
                 </p>
               </div>
             </li>
@@ -372,9 +402,14 @@ function InformationPage() {
             >
               ×
             </button>
-            <span className="information-pollutant-symbol">
-              {selectedPollutant.symbol}
-            </span>
+            <div className="information-pollutant-modal-label">
+              <span className="information-pollutant-symbol">
+                {selectedPollutant.symbol}
+              </span>
+              <span className="information-pollutant-unit">
+                {getPollutantUnit(selectedPollutant.symbol)}
+              </span>
+            </div>
             <h2 id="pollutant-modal-title">{selectedPollutant.name}</h2>
             <p id="pollutant-modal-description">
               {selectedPollutant.description}

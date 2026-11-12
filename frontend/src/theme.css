@@ -125,6 +125,8 @@
 .app-shell.dark-mode .content-panel .evaluation-point-count,
 .app-shell.dark-mode .content-panel .evaluation-chart-unit,
 .app-shell.dark-mode .content-panel .prediction-shap-baseline,
+.app-shell.dark-mode .content-panel .prediction-shap-guide,
+.app-shell.dark-mode .content-panel .prediction-shap-lag-note,
 .app-shell.dark-mode .content-panel .current-conditions-time,
 .app-shell.dark-mode .content-panel .conditions-status,
 .app-shell.dark-mode .content-panel .conditions-loading,
@@ -132,10 +134,41 @@
 .app-shell.dark-mode .content-panel .current-conditions-location-meta,
 .app-shell.dark-mode .content-panel .information-card-icon,
 .app-shell.dark-mode .content-panel .information-pollutant-symbol,
+.app-shell.dark-mode .content-panel .information-pollutant-modal-label .information-pollutant-unit,
 .app-shell.dark-mode .content-panel .information-city-list li,
 .app-shell.dark-mode .content-panel .information-scenario-type {
   border-color: #364256;
   background-color: #222e40;
+}
+
+.app-shell.dark-mode .content-panel .prediction-shap-guide {
+  background:
+    radial-gradient(ellipse at top left, rgba(91, 107, 201, 0.13), transparent 55%),
+    #1b2636;
+}
+
+.app-shell.dark-mode .content-panel .prediction-shap-lag-note {
+  background: rgba(34, 46, 64, 0.72);
+}
+
+.app-shell.dark-mode .content-panel .prediction-shap-eyebrow,
+.app-shell.dark-mode .content-panel .prediction-shap-lag-note b {
+  color: #b8c3ff;
+}
+
+.app-shell.dark-mode .content-panel .prediction-shap-legend-swatch.positive {
+  background: #193b2b;
+  color: #6bd58b;
+}
+
+.app-shell.dark-mode .content-panel .prediction-shap-legend-swatch.negative {
+  background: #482b32;
+  color: #ff8585;
+}
+
+.app-shell.dark-mode .content-panel .prediction-shap-legend-swatch.neutral {
+  background: #303b4d;
+  color: #b5bfce;
 }
 
 .app-shell.dark-mode .content-panel .information-method {
@@ -304,6 +337,14 @@
   color: #b8c3ff;
 }
 
+.app-shell.dark-mode .content-panel .information-pollutant-name {
+  color: #e5e7eb;
+}
+
+.app-shell.dark-mode .content-panel .information-pollutant-unit {
+  color: #9aa7ba;
+}
+
 .app-shell.dark-mode .content-panel .prediction-message.error,
 .app-shell.dark-mode .content-panel .evaluation-message.error,
 .app-shell.dark-mode .content-panel .conditions-error {
@@ -356,6 +397,135 @@
 }
 
 .app-shell.dark-mode .content-panel .scenario-option.selected .scenario-name {
+  color: #b8c3ff;
+}
+
+.app-shell.dark-mode .content-panel .next-hour-prediction-flow-icon {
+  border-color: #3b4770;
+  background: #293653;
+  color: #b8c3ff;
+}
+
+.app-shell.dark-mode .content-panel .next-hour-prediction {
+  border-color: #303b4d;
+  background:
+    radial-gradient(ellipse at 100% 0, rgba(90, 106, 207, 0.16), transparent 48%),
+    linear-gradient(135deg, #1b2636 0%, #202b40 100%);
+}
+
+.app-shell.dark-mode .content-panel .next-hour-prediction .current-conditions-eyebrow {
+  color: #b8c3ff;
+}
+
+.app-shell.dark-mode .content-panel .next-hour-prediction .prediction-module-heading p:last-child {
+  color: #aab4c4;
+}
+
+.app-shell.dark-mode .content-panel .next-hour-prediction-flow-label,
+.app-shell.dark-mode .content-panel .next-hour-prediction-result span,
+.app-shell.dark-mode .content-panel .next-hour-prediction-result p {
+  color: #aab4c4;
+}
+
+.app-shell.dark-mode .content-panel .next-hour-prediction-result strong,
+.app-shell.dark-mode .content-panel .next-hour-prediction-flow-label strong {
+  color: #b8c3ff;
+}
+
+.app-shell.dark-mode .content-panel .next-hour-prediction-results {
+  border-color: rgba(184, 195, 255, 0.18);
+}
+
+.app-shell.dark-mode .content-panel .information-scenario-features li {
+  color: #c0cad8;
+}
+
+.app-shell.dark-mode .content-panel .information-scenario-card .information-scenario-note {
+  border-color: #364256;
+  color: #9aa7ba;
+}
+
+.app-shell.dark-mode .content-panel .information-scenario-features li::before {
+  background: #9aa7ff;
+}
+
+.app-shell.dark-mode .content-panel .interpretation-history-chart {
+  border-color: #303b4d;
+  background: #1b2636;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.app-shell.dark-mode .content-panel .interpretation-result-card {
+  border-color: #303b4d;
+  background: #1b2636;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.app-shell.dark-mode .content-panel .interpretation-result-heading {
+  border-color: #344155;
+}
+
+.app-shell.dark-mode .content-panel .interpretation-result-scenario {
+  border-color: #3a4664;
+  background: #293653;
+  color: #b8c3ff;
+}
+
+.app-shell.dark-mode .content-panel .interpretation-result-reading {
+  border-color: #344155;
+  background:
+    radial-gradient(ellipse at top left, rgba(90, 106, 207, 0.16), transparent 58%),
+    #202b40;
+}
+
+.app-shell.dark-mode .content-panel .interpretation-result-heading h2,
+.app-shell.dark-mode .content-panel .interpretation-result-details strong {
+  color: #e4e9f1;
+}
+
+.app-shell.dark-mode .content-panel .interpretation-result-reading > span,
+.app-shell.dark-mode .content-panel .interpretation-result-value > span,
+.app-shell.dark-mode .content-panel .interpretation-result-detail > div > span {
+  color: #aab4c4;
+}
+
+.app-shell.dark-mode .content-panel .interpretation-result-details {
+  border-color: #344155;
+}
+
+.app-shell.dark-mode .content-panel .interpretation-result-details > div {
+  border-color: #344155;
+}
+
+.app-shell.dark-mode .content-panel .interpretation-result-detail-icon {
+  border-color: #3a4664;
+  background: #293653;
+  color: #b8c3ff;
+}
+
+.app-shell.dark-mode .content-panel .interpretation-result-details .interpretation-result-time {
+  color: #b8c3ff;
+}
+
+.app-shell.dark-mode .content-panel .interpretation-history-grid {
+  stroke: #344155;
+}
+
+.app-shell.dark-mode .content-panel .interpretation-history-axis-label,
+.app-shell.dark-mode .content-panel .interpretation-history-heading p,
+.app-shell.dark-mode .content-panel .interpretation-history-legend {
+  fill: #9aa7ba;
+  color: #9aa7ba;
+}
+
+.app-shell.dark-mode .content-panel .interpretation-history-empty {
+  background: #222e40;
+  color: #c0cad8;
+}
+
+.app-shell.dark-mode .content-panel .interpretation-history-count {
+  border-color: #364256;
+  background: #293653;
   color: #b8c3ff;
 }
 

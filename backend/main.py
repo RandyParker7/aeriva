@@ -9,6 +9,8 @@ from datetime import datetime, timedelta, timezone
 from prediction import (
     get_model_config,
     get_available_predictions,
+    get_final_predictions,
+    FINAL_MODELS,
     predict_model_with_explanation,
     MODEL_REGISTRY,
     POLLUTANT_VARIABLES as pollutants,
@@ -167,6 +169,7 @@ def prediction_options():
         "pollutants": list(pollutants.keys()),
         "scenarios": scenarios,
         "available_predictions": get_available_predictions(),
+        "final_predictions": get_final_predictions(),
         "prediction_time_range": get_prediction_time_range(),
     }
 
@@ -295,7 +298,7 @@ def get_current_conditions(location: str):
 class PredictionRequest(BaseModel):
     location: str
     pollutant: str
-    scenario: str
+    scenario: str | None = None
     prediction_time: datetime
 
 @app.post("/prediction")
@@ -313,23 +316,24 @@ def predict(request: PredictionRequest):
             detail=f"Pollutant tidak dikenal. Pilihan: {', '.join(pollutants)}"
         )
 
-    if request.scenario not in scenarios:
+    if request.scenario is not None and request.scenario not in scenarios:
         raise HTTPException(
             status_code=400,
             detail=f"Scenario tidak dikenal. Pilihan: {', '.join(scenarios)}"
         )
 
+    scenario = request.scenario or FINAL_MODELS[request.location][request.pollutant]
     model_config = get_model_config(
         request.location,
         request.pollutant,
-        request.scenario
+        scenario
     )
     if model_config is None:
         raise HTTPException(
             status_code=400,
             detail=(
                 "Model prediksi belum tersedia untuk kombinasi "
-                f"{request.location}, {request.pollutant}, {request.scenario}. "
+                f"{request.location}, {request.pollutant}, {scenario}. "
                 "Kombinasi yang tersedia: "
                 f"{get_available_predictions()}"
             )
@@ -343,6 +347,7 @@ def predict(request: PredictionRequest):
     latitude = locations[request.location]["latitude"]
     longitude = locations[request.location]["longitude"]
     feature_values = {}
+    previous_24_hours = []
     pollutant_variable_names = set(pollutants.values())
     pollutant_features = {
         feature: (variable, lag)
@@ -359,7 +364,8 @@ def predict(request: PredictionRequest):
         pollutant_lags = [lag for _, lag in pollutant_features.values()]
         max_pollutant_lag = max(pollutant_lags)
         min_pollutant_lag = min(pollutant_lags)
-        time_start = prediction_time - timedelta(hours=max_pollutant_lag)
+        pollutant_start_lag = max(max_pollutant_lag, 24)
+        time_start = prediction_time - timedelta(hours=pollutant_start_lag)
         time_end = prediction_time - timedelta(hours=min_pollutant_lag)
         earliest_supported_time, latest_supported_time = (
             get_pollutant_data_time_range(
@@ -409,7 +415,7 @@ def predict(request: PredictionRequest):
             for index, variable in enumerate(pollutant_variables)
         }
         expected_pollutant_hours = (
-            max_pollutant_lag - min_pollutant_lag + 1
+            pollutant_start_lag - min_pollutant_lag + 1
         )
         if any(
             len(values) < expected_pollutant_hours
@@ -421,9 +427,21 @@ def predict(request: PredictionRequest):
             )
 
         feature_values.update({
-            feature: pollutant_values[variable][max_pollutant_lag - lag]
+            feature: pollutant_values[variable][pollutant_start_lag - lag]
             for feature, (variable, lag) in pollutant_features.items()
         })
+        prediction_pollutant_variable = pollutants[request.pollutant]
+        previous_24_hours = [
+            {
+                "time": (
+                    prediction_time - timedelta(hours=lag)
+                ).strftime("%Y-%m-%dT%H:%M"),
+                "value": pollutant_values[prediction_pollutant_variable][
+                    pollutant_start_lag - lag
+                ],
+            }
+            for lag in range(24, 0, -1)
+        ]
 
     if weather_features:
         weather_lags = [lag for _, lag in weather_features.values()]
@@ -514,7 +532,7 @@ def predict(request: PredictionRequest):
     prediction, interpretation = predict_model_with_explanation(
         location=request.location,
         pollutant=request.pollutant,
-        scenario=request.scenario,
+        scenario=scenario,
         input_values=input_values
     )
 
@@ -524,7 +542,7 @@ def predict(request: PredictionRequest):
         "latitude": latitude,
         "longitude": longitude,
         "pollutant": request.pollutant,
-        "scenario": request.scenario,
+        "scenario": scenario,
         "prediction_time": prediction_time.strftime(
             "%Y-%m-%dT%H:%M"
         ),
@@ -534,6 +552,7 @@ def predict(request: PredictionRequest):
             ),
             "value": input_values[f"{request.pollutant}_lag1"],
         },
+        "previous_24_hours": previous_24_hours,
         "input": input_values,
         "interpretation": interpretation,
         "prediction": prediction

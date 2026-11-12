@@ -3,12 +3,14 @@ import './layout.css'
 import './sidebar.css'
 import './theme.css'
 import PredictionPage from './pages/PredictionPage'
+import InterpretationPage from './pages/InterpretationPage'
 import EvaluationPage from './pages/EvaluationPage'
 import InformationPage from './pages/InformationPage'
 import AboutPage from './pages/AboutPage'
 
 const menuItems = [
   { id: 'prediction', label: 'Prediction' },
+  { id: 'interpretation', label: 'Interpretation' },
   { id: 'evaluation', label: 'Evaluation' },
   { id: 'information', label: 'Information' },
   { id: 'about', label: 'About' },
@@ -16,6 +18,7 @@ const menuItems = [
 
 const pageMap = {
   prediction: PredictionPage,
+  interpretation: InterpretationPage,
   evaluation: EvaluationPage,
   information: InformationPage,
   about: AboutPage,

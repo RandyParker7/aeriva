@@ -2,132 +2,48 @@ import { useEffect, useRef, useState } from 'react'
 import {
   formatUtcDateInWib,
   formatUtcTimeInWib,
-  getWibDateTimeParts,
-  wibDateTimeToUtcIso,
 } from '../utils/time'
+import { formatPollutantLabel } from '../utils/pollutants'
+import { getAirQualityCategory } from '../utils/airQuality'
 import './PredictionPage.css'
 
 const CONDITIONS_REFRESH_INTERVAL = 30 * 60 * 1000
 
-function getPredictionHourBounds(date, timeRange) {
-  if (!date || !timeRange) {
-    return { min: 0, max: 23 }
-  }
-
-  const minDateTime = getWibDateTimeParts(timeRange.min)
-  const maxDateTime = getWibDateTimeParts(timeRange.max)
-  return {
-    min: date === minDateTime.date ? minDateTime.hour : 0,
-    max: date === maxDateTime.date ? maxDateTime.hour : 23,
-  }
-}
-
-const scenarios = [
+const currentMetricGroups = [
   {
-    id: 'S1',
-    name: 'Skenario 1',
-    description: 'Data Historis Polutan',
+    title: 'Kualitas udara',
+    metrics: [
+      { key: 'pm2_5', label: 'PM2.5', unit: 'µg/m³' },
+      { key: 'carbon_monoxide', label: 'CO', unit: 'µg/m³' },
+      { key: 'nitrogen_dioxide', label: 'NO₂', unit: 'µg/m³' },
+      { key: 'sulphur_dioxide', label: 'SO₂', unit: 'µg/m³' },
+      { key: 'ozone', label: 'O₃', unit: 'µg/m³' },
+    ],
   },
   {
-    id: 'S2',
-    name: 'Skenario 2',
-    description: 'Data Historis Polutan + Meteorologi',
+    title: 'Meteorologi',
+    metrics: [
+      { key: 'temperature_2m', label: 'Suhu', unit: '°C' },
+      { key: 'relative_humidity_2m', label: 'Kelembapan', unit: '%' },
+      { key: 'rain', label: 'Curah hujan', unit: 'mm' },
+      { key: 'surface_pressure', label: 'Tekanan udara', unit: 'hPa' },
+      { key: 'wind_speed_10m', label: 'Kecepatan angin', unit: 'km/j' },
+      { key: 'wind_direction_10m', label: 'Arah angin', unit: '°' },
+    ],
   },
 ]
 
-const shapFeatureLabels = {
-  temperature: 'Suhu',
-  humidity: 'Kelembapan',
-  rain: 'Curah hujan',
-  pressure: 'Tekanan udara',
-  wind_speed: 'Kecepatan angin',
-  wind_direction: 'Arah angin',
-}
-
-function formatShapFeature(feature) {
-  const match = feature.match(/^(.*)_lag(\d+)$/)
-  if (!match) {
-    return feature
-  }
-
-  return `${shapFeatureLabels[match[1]] || match[1]} · lag ${match[2]}`
-}
-
-function ShapInterpretation({ interpretation }) {
-  const maxImpact = Math.max(
-    ...interpretation.features.map((feature) => Math.abs(feature.shap_value)),
-  )
-
-  return (
-    <section className="prediction-shap" aria-labelledby="prediction-shap-title">
-      <div className="prediction-shap-heading">
-        <div>
-          <h2 id="prediction-shap-title">Interpretasi model (SHAP)</h2>
-          <p>
-            Nilai prediksi dimulai dari baseline, yaitu nilai awal rata-rata
-            model. Setiap fitur menggeser nilai itu: kontribusi positif
-            (menaikkan) menambah prediksi dari baseline, sedangkan kontribusi
-            negatif (menurunkan) menguranginya. Ini menjelaskan pengaruh fitur
-            terhadap hasil model, bukan berarti nilai fiturnya sendiri naik
-            atau turun. Fitur diurutkan berdasarkan besar pengaruhnya; semakin
-            panjang garis, semakin besar kontribusinya.
-          </p>
-        </div>
-        <span className="prediction-shap-baseline">
-          Baseline {Number(interpretation.base_value).toFixed(2)}
-        </span>
-      </div>
-      <ol className="prediction-shap-list">
-        {interpretation.features.map((feature) => {
-          const magnitude = Math.abs(feature.shap_value)
-          const barWidth = maxImpact
-            ? `${(magnitude / maxImpact) * 100}%`
-            : '0%'
-          const direction = feature.impact === 'positive'
-            ? 'Menaikkan'
-            : feature.impact === 'negative'
-              ? 'Menurunkan'
-              : 'Netral'
-
-          return (
-            <li className="prediction-shap-item" key={feature.feature}>
-              <div className="prediction-shap-item-heading">
-                <span className="prediction-shap-feature">
-                  {formatShapFeature(feature.feature)}
-                  <span>Nilai input {Number(feature.value).toFixed(2)}</span>
-                </span>
-                <span className={`prediction-shap-impact ${feature.impact}`}>
-                  {direction} · {feature.shap_value > 0 ? '+' : ''}
-                  {Number(feature.shap_value).toFixed(3)}
-                </span>
-              </div>
-              <div className="prediction-shap-track" aria-hidden="true">
-                <span
-                  className={`prediction-shap-bar ${feature.impact}`}
-                  style={{ width: barWidth }}
-                />
-              </div>
-            </li>
-          )
-        })}
-      </ol>
-    </section>
-  )
-}
-
 function PredictionPage() {
-  const [selectedScenario, setSelectedScenario] = useState('')
-  const [predictionDate, setPredictionDate] = useState('')
-  const [predictionHour, setPredictionHour] = useState(12)
-  const [location, setLocation] = useState('')
   const [conditionsLocation, setConditionsLocation] = useState('')
-  const [pollutant, setPollutant] = useState('')
-  const [options, setOptions] = useState(null)
-  const [optionsError, setOptionsError] = useState('')
-  const [isLoadingOptions, setIsLoadingOptions] = useState(true)
+  const [predictionLocation, setPredictionLocation] = useState('')
+  const [predictionPollutant, setPredictionPollutant] = useState('')
+  const [currentTime, setCurrentTime] = useState(() => new Date())
   const [isPredicting, setIsPredicting] = useState(false)
   const [predictionError, setPredictionError] = useState('')
   const [predictionResult, setPredictionResult] = useState(null)
+  const [options, setOptions] = useState(null)
+  const [optionsError, setOptionsError] = useState('')
+  const [isLoadingOptions, setIsLoadingOptions] = useState(true)
   const [currentConditions, setCurrentConditions] = useState(null)
   const [currentConditionsError, setCurrentConditionsError] = useState('')
   const [mapError, setMapError] = useState('')
@@ -135,11 +51,35 @@ function PredictionPage() {
   const [conditionsRefresh, setConditionsRefresh] = useState(0)
   const conditionsMapRef = useRef(null)
   const predictionResultsRef = useRef(null)
-  const predictionTimeRange = options?.prediction_time_range
-  const predictionHourBounds = getPredictionHourBounds(
-    predictionDate,
-    predictionTimeRange,
+  const nextPredictionTime = new Date(currentTime)
+  nextPredictionTime.setUTCMinutes(0, 0, 0)
+  nextPredictionTime.setUTCHours(nextPredictionTime.getUTCHours() + 1)
+  const nextPredictionTimeIso = nextPredictionTime.toISOString()
+  const selectedModel = options?.final_predictions?.find(
+    (item) =>
+      item.location === predictionLocation &&
+      item.pollutant === predictionPollutant,
   )
+  const predictionCategory = predictionResult
+    ? getAirQualityCategory(
+        predictionResult.pollutant,
+        Number(predictionResult.prediction),
+      )
+    : null
+
+  useEffect(() => {
+    if (!predictionResult || !predictionResultsRef.current) {
+      return
+    }
+
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+    predictionResultsRef.current.scrollIntoView({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'center',
+    })
+  }, [predictionResult])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -152,14 +92,13 @@ function PredictionPage() {
         const data = await response.json()
 
         if (!response.ok) {
-          throw new Error(data.detail || 'Gagal memuat opsi prediksi.')
+          throw new Error(data.detail || 'Gagal memuat data pemantauan.')
         }
 
         setOptions(data)
         setConditionsLocation(
-          (currentLocation) => currentLocation || data.locations?.[0] || ''
+          (currentLocation) => currentLocation || data.locations?.[0] || '',
         )
-
       } catch (error) {
         if (error.name !== 'AbortError') {
           setOptionsError(error.message)
@@ -233,6 +172,14 @@ function PredictionPage() {
   }, [])
 
   useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentTime(new Date())
+    }, 30_000)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
+
+  useEffect(() => {
     const locationCoordinates = options?.location_coordinates
     if (!locationCoordinates || !conditionsMapRef.current) {
       return undefined
@@ -289,11 +236,11 @@ function PredictionPage() {
             },
           )
             .on('click', () => {
-            setIsLoadingConditions(true)
-            setCurrentConditionsError('')
-            setConditionsLocation(city)
-            setConditionsRefresh((refresh) => refresh + 1)
-          })
+              setIsLoadingConditions(true)
+              setCurrentConditionsError('')
+              setConditionsLocation(city)
+              setConditionsRefresh((refresh) => refresh + 1)
+            })
             .addTo(map)
         })
         setMapError('')
@@ -311,78 +258,28 @@ function PredictionPage() {
     }
   }, [options?.location_coordinates])
 
-  const isCombinationAvailable = options?.available_predictions?.some(
-    (item) =>
-      item.location === location &&
-      item.pollutant === pollutant &&
-      item.scenario === selectedScenario,
-  )
-
   const displayedConditions =
     currentConditions?.location === conditionsLocation
       ? currentConditions
       : null
 
-  const currentMetricGroups = [
-    {
-      title: 'Kualitas udara',
-      metrics: [
-        { key: 'pm2_5', label: 'PM2.5', unit: 'µg/m³' },
-        { key: 'carbon_monoxide', label: 'CO', unit: 'µg/m³' },
-        { key: 'nitrogen_dioxide', label: 'NO₂', unit: 'µg/m³' },
-        { key: 'sulphur_dioxide', label: 'SO₂', unit: 'µg/m³' },
-        { key: 'ozone', label: 'O₃', unit: 'µg/m³' },
-      ],
-    },
-    {
-      title: 'Meteorologi',
-      metrics: [
-        { key: 'temperature_2m', label: 'Suhu', unit: '°C' },
-        { key: 'relative_humidity_2m', label: 'Kelembapan', unit: '%' },
-        { key: 'rain', label: 'Curah hujan', unit: 'mm' },
-        { key: 'surface_pressure', label: 'Tekanan udara', unit: 'hPa' },
-        { key: 'wind_speed_10m', label: 'Kecepatan angin', unit: 'km/j' },
-        { key: 'wind_direction_10m', label: 'Arah angin', unit: '°' },
-      ],
-    },
-  ]
-
-  useEffect(() => {
-    if (predictionResult){
-      predictionResultsRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      })
+  async function handlePrediction() {
+    if (!selectedModel) {
+      return
     }
-  }, [predictionResult])
 
-  async function handlePrediction(event) {
-    event.preventDefault()
     setIsPredicting(true)
     setPredictionError('')
     setPredictionResult(null)
 
     try {
-      const predictionTime = wibDateTimeToUtcIso(
-        predictionDate,
-        predictionHour,
-      )
-      if (
-        !predictionTimeRange ||
-        Date.parse(predictionTime) < Date.parse(predictionTimeRange.min) ||
-        Date.parse(predictionTime) > Date.parse(predictionTimeRange.max)
-      ) {
-        throw new Error('Waktu prediksi berada di luar rentang data yang tersedia.')
-      }
-
       const response = await fetch('/api/prediction', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          location,
-          pollutant,
-          scenario: selectedScenario,
-          prediction_time: predictionTime,
+          location: predictionLocation,
+          pollutant: predictionPollutant,
+          prediction_time: nextPredictionTimeIso,
         }),
       })
       const data = await response.json()
@@ -404,360 +301,277 @@ function PredictionPage() {
       <header className="prediction-page-header">
         <h1 className="header">Prediction</h1>
         <p className="prediction-intro">
-          Pilih skenario dan parameter untuk menjalankan prediksi kualitas udara.
+          Pantau kondisi kualitas udara dan meteorologi terkini di kota pemantauan.
         </p>
       </header>
-      <div className="prediction-workspace">
-        <section className="prediction-module">
-          {isLoadingOptions && (
-            <p className="prediction-message" role="status">
-              Memuat opsi prediksi...
+
+      <aside className="current-conditions" aria-labelledby="current-conditions-title">
+        <div className="current-conditions-header">
+          <div>
+            <p className="current-conditions-eyebrow">PEMANTAUAN LANGSUNG</p>
+            <h2 id="current-conditions-title">Kondisi saat ini</h2>
+            <p className="conditions-location-prompt">
+              Pilih marker pada peta untuk melihat kondisi terkini di lokasi pemantauan.
             </p>
-          )}
-          {optionsError && (
-            <p className="prediction-message error" role="alert">
-              Tidak dapat terhubung ke backend: {optionsError}
-            </p>
-          )}
-        <fieldset className="scenario-selection">
-          <legend>Pilih skenario prediksi</legend>
-          <div className="scenario-options">
-            {scenarios.map((scenario) => (
-              <label
-                className={`scenario-option ${
-                  selectedScenario === scenario.id ? 'selected' : ''
-                }`}
-                key={scenario.id}
+          </div>
+          <button
+            className="conditions-refresh"
+            type="button"
+            aria-label="Perbarui data kondisi saat ini"
+            title="Perbarui data"
+            disabled={!conditionsLocation || isLoadingConditions}
+            onClick={() => setConditionsRefresh((refresh) => refresh + 1)}
+          >
+            ↻
+          </button>
+        </div>
+        <div className="conditions-map-frame">
+          <div
+            className="conditions-map"
+            ref={conditionsMapRef}
+            role="img"
+            aria-label={`Peta lokasi pemantauan ${conditionsLocation || ''}`}
+          />
+          {displayedConditions?.updated_at && (
+            <div className="current-conditions-update">
+              <svg
+                className="current-conditions-update-icon"
+                viewBox="0 0 20 20"
+                aria-hidden="true"
               >
-                <input
-                  type="radio"
-                  name="prediction-scenario"
-                  value={scenario.id}
-                  checked={selectedScenario === scenario.id}
-                  disabled={isLoadingOptions || Boolean(optionsError)}
-                  onChange={() => {
-                    setSelectedScenario(scenario.id)
-                    setPredictionError('')
-                    setPredictionResult(null)
-                  }}
-                />
-                <span className="scenario-option-content">
-                  <span className="scenario-name">{scenario.name}</span>
-                  <span className="scenario-description">
-                    {scenario.description}
-                  </span>
+                <circle cx="10" cy="10" r="7.25" />
+                <path d="M10 5.75v4.5l3 1.75" />
+              </svg>
+              <div>
+                <span className="current-conditions-update-label">
+                  Pembaruan terakhir
                 </span>
-              </label>
+                <span className="current-conditions-update-datetime">
+                  {formatUtcDateInWib(displayedConditions.updated_at)} ·{' '}
+                  {formatUtcTimeInWib(displayedConditions.updated_at)} WIB
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+        {optionsError && (
+          <p className="conditions-status conditions-error" role="alert">
+            Data pemantauan gagal dimuat: {optionsError}
+          </p>
+        )}
+        {mapError && (
+          <p className="conditions-status conditions-error" role="alert">
+            {mapError}
+          </p>
+        )}
+        {displayedConditions && (
+          <div className="current-conditions-location-meta">
+            <div className="current-conditions-place">
+              <span className="current-conditions-place-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" focusable="false">
+                  <path d="M10 18s6-5.1 6-10a6 6 0 1 0-12 0c0 4.9 6 10 6 10Z" />
+                  <circle cx="10" cy="8" r="2" />
+                </svg>
+              </span>
+              <div>
+                <span className="current-conditions-meta-label">Daerah pemantauan</span>
+                <strong>{conditionsLocation}</strong>
+              </div>
+            </div>
+            <p className="current-conditions-coordinates">
+              <span className="current-conditions-meta-label">Koordinat</span>
+              <span>
+                {Number(displayedConditions.latitude).toFixed(5)},{' '}
+                {Number(displayedConditions.longitude).toFixed(5)}
+              </span>
+            </p>
+          </div>
+        )}
+        {isLoadingConditions && (
+          <div className="conditions-loading" role="status">
+            <span className="conditions-loading-spinner" aria-hidden="true" />
+            <span>
+              Memuat pemantauan terkini untuk <strong>{conditionsLocation}</strong>
+              <span className="conditions-loading-dots" aria-hidden="true">...</span>
+            </span>
+          </div>
+        )}
+        {currentConditionsError && (
+          <p className="conditions-status conditions-error" role="alert">
+            Data terkini gagal dimuat: {currentConditionsError}
+          </p>
+        )}
+        {displayedConditions && (
+          <div className="current-conditions-groups">
+            {currentMetricGroups.map((group, index) => (
+              <section
+                className={`conditions-group conditions-group-${index + 1}`}
+                key={group.title}
+              >
+                <h3>{group.title}</h3>
+                <div className="conditions-grid">
+                  {group.metrics.map((metric) => {
+                    const value = displayedConditions.values[metric.key]
+                    return (
+                      <article className="condition-card" key={metric.key}>
+                        <span className="condition-label">{metric.label}</span>
+                        <strong className="condition-value">
+                          {value == null ? '—' : Number(value).toLocaleString(
+                            'id-ID',
+                            { maximumFractionDigits: 1 },
+                          )}
+                          <span>{metric.unit}</span>
+                        </strong>
+                      </article>
+                    )
+                  })}
+                </div>
+              </section>
             ))}
           </div>
-        </fieldset>
-
-        <form className="prediction-form" onSubmit={handlePrediction}>
-            <div className="prediction-form-heading">
-              <h2>Parameter prediksi</h2>
-            </div>
-            <div className="prediction-fields">
-              <label className="prediction-field" htmlFor="prediction-date">
-                <span>Tanggal prediksi</span>
-                <input
-                  id="prediction-date"
-                  type="date"
-                  required
-                  min={predictionTimeRange
-                    ? getWibDateTimeParts(predictionTimeRange.min).date
-                    : undefined}
-                  max={predictionTimeRange
-                    ? getWibDateTimeParts(predictionTimeRange.max).date
-                    : undefined}
-                  disabled={isLoadingOptions || Boolean(optionsError)}
-                  value={predictionDate}
-                  onChange={(event) => {
-                    const nextDate = event.target.value
-                    const nextBounds = getPredictionHourBounds(
-                      nextDate,
-                      predictionTimeRange,
-                    )
-                    setPredictionDate(nextDate)
-                    setPredictionHour((hour) =>
-                      Math.min(nextBounds.max, Math.max(nextBounds.min, hour)),
-                    )
-                  }}
-                />
-              </label>
-
-              <label className="prediction-field" htmlFor="prediction-location">
-                <span>Kota</span>
-                <select
-                  id="prediction-location"
-                  required
-                  value={location}
-                  onChange={(event) => setLocation(event.target.value)}
-                >
-                  <option value="">Pilih kota</option>
-                  {options?.locations?.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="prediction-field" htmlFor="prediction-pollutant">
-                <span>Jenis polutan</span>
-                <select
-                  id="prediction-pollutant"
-                  required
-                  value={pollutant}
-                  onChange={(event) => setPollutant(event.target.value)}
-                >
-                  <option value="">Pilih jenis polutan</option>
-                  {options?.pollutants?.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <div className="prediction-hour">
-                <div className="prediction-hour-heading">
-                  <label htmlFor="prediction-hour">Waktu prediksi</label>
-                  <output htmlFor="prediction-hour">
-                    {String(predictionHour).padStart(2, '0')}:00
-                  </output>
-                </div>
-                <input
-                  id="prediction-hour"
-                  type="range"
-                  min={predictionHourBounds.min}
-                  max={predictionHourBounds.max}
-                  step="1"
-                  value={predictionHour}
-                  aria-valuetext={`${String(predictionHour).padStart(2, '0')}:00`}
-                  onChange={(event) =>
-                    setPredictionHour(Number(event.target.value))
-                  }
-                />
-                <div className="prediction-hour-ticks" aria-hidden="true">
-                  <span>00:00</span>
-                  <span>06:00</span>
-                  <span>12:00</span>
-                  <span>18:00</span>
-                  <span>23:00</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="prediction-actions">
-              <button
-                className="prediction-button"
-                type="submit"
-                disabled={
-                  isPredicting ||
-                  Boolean(optionsError) ||
-                  !predictionTimeRange ||
-                  !predictionDate ||
-                  !location ||
-                  !pollutant ||
-                  !isCombinationAvailable
-                }
-              >
-                {isPredicting ? 'Memproses...' : 'Prediksi'}
-              </button>
-              {selectedScenario && location && pollutant && !isCombinationAvailable && (
-                <p className="prediction-message error" role="alert">
-                  Kombinasi kota, polutan, dan skenario ini tidak tersedia.
-                </p>
-              )}
-            </div>
-
-            {isPredicting && (
-              <div className="prediction-loading" role="status">
-                <p>
-                  Prediksi<span className="prediction-loading-dots">...</span>
-                </p>
-                <span className="prediction-loading-spinner" aria-hidden="true" />
-              </div>
-            )}
-
-            {predictionError && (
-              <p className="prediction-message error" role="alert">
-                Prediksi gagal: {predictionError}
-              </p>
-            )}
-            {predictionResult && (
-              <div className="prediction-results" aria-live="polite" ref={predictionResultsRef}>
-                <section className="prediction-previous-hour">
-                  <h2>Data {predictionResult.pollutant} 1 Jam Sebelumnya</h2>
-                  <strong>
-                    {predictionResult.previous_hour_pollutant.value}
-                  </strong>
-                  <div className="prediction-result-datetime">
-                    <span className="prediction-result-date">
-                      {formatUtcDateInWib(
-                        predictionResult.previous_hour_pollutant.time,
-                      )}
-                    </span>
-                    <strong className="prediction-result-time">
-                      {formatUtcTimeInWib(
-                        predictionResult.previous_hour_pollutant.time,
-                      )} 
-                    </strong>
-                  </div>
-                  <p>
-                    Koordinat: {Number(predictionResult.latitude).toFixed(5)},{' '}
-                    {Number(predictionResult.longitude).toFixed(5)}
-                  </p>
-                </section>
-                <section className="prediction-result">
-                  <h2>Hasil Prediksi</h2>
-                  <p>
-                    <strong>{predictionResult.prediction}</strong>
-                  </p>
-                  <div className="prediction-result-datetime">
-                    <span className="prediction-result-date">
-                      {formatUtcDateInWib(
-                        predictionResult.prediction_time,
-                      )}
-                    </span>
-                    <strong className="prediction-result-time">
-                      {formatUtcTimeInWib(
-                        predictionResult.prediction_time,
-                      )}
-                    </strong>
-                  </div>
-                  <p>
-                    {predictionResult.location} · {predictionResult.pollutant} ·
-                    {' '}{predictionResult.scenario}
-                  </p>
-                  <p>
-                    Koordinat: {Number(predictionResult.latitude).toFixed(5)},{' '}
-                    {Number(predictionResult.longitude).toFixed(5)}
-                  </p>
-                </section>
-                <ShapInterpretation
-                  interpretation={predictionResult.interpretation}
-                />
-              </div>
-            )}
-        </form>
-        </section>
-        <aside className="current-conditions" aria-labelledby="current-conditions-title">
-          <div className="current-conditions-header">
-            <div>
-              <p className="current-conditions-eyebrow">PEMANTAUAN LANGSUNG</p>
-              <h2 id="current-conditions-title">Kondisi saat ini</h2>
-              <p className="conditions-location-prompt">
-                Klik marker pada peta untuk melihat kondisi udara dan cuaca terkini di lokasi pemantauan.
-              </p>
-            </div>
-            <button
-              className="conditions-refresh"
-              type="button"
-              aria-label="Perbarui data kondisi saat ini"
-              title="Perbarui data"
-              disabled={!conditionsLocation || isLoadingConditions}
-              onClick={() => setConditionsRefresh((refresh) => refresh + 1)}
-            >
-              ↻
-            </button>
-          </div>
-          <div className="conditions-map-frame">
-            <div
-              className="conditions-map"
-              ref={conditionsMapRef}
-              role="img"
-              aria-label={`Peta lokasi pemantauan ${conditionsLocation || ''}`}
-            />
-          </div>
-          {mapError && (
-            <p className="conditions-status conditions-error" role="alert">
-              {mapError}
-            </p>
-          )}
-          {displayedConditions?.updated_at && (
-            <p className="current-conditions-time">
-              Data per jam {formatUtcTimeInWib(
-                displayedConditions.updated_at,
-              )} 
-            </p>
-          )}
-          {displayedConditions && (
-            <div className="current-conditions-location-meta">
-              <div className="current-conditions-place">
-                <span className="current-conditions-place-icon" aria-hidden="true">
-                  <svg viewBox="0 0 20 20" focusable="false">
-                    <path d="M10 18s6-5.1 6-10a6 6 0 1 0-12 0c0 4.9 6 10 6 10Z" />
-                    <circle cx="10" cy="8" r="2" />
-                  </svg>
-                </span>
-                <div>
-                  <span className="current-conditions-meta-label">Daerah pemantauan</span>
-                  <strong>{conditionsLocation}</strong>
-                </div>
-              </div>
-              <p className="current-conditions-coordinates">
-                <span className="current-conditions-meta-label">Koordinat</span>
-                <span>
-                  {Number(displayedConditions.latitude).toFixed(5)},{' '}
-                  {Number(displayedConditions.longitude).toFixed(5)}
-                </span>
-              </p>
-            </div>
-          )}
-          {isLoadingConditions && (
-            <div className="conditions-loading" role="status">
-              <span className="conditions-loading-spinner" aria-hidden="true" />
-              <span>
-                Memuat pemantauan terkini untuk <strong>{conditionsLocation}</strong>
-                <span className="conditions-loading-dots" aria-hidden="true">...</span>
-              </span>
-            </div>
-          )}
-          {currentConditionsError && (
-            <p className="conditions-status conditions-error" role="alert">
-              Data terkini gagal dimuat: {currentConditionsError}
-            </p>
-          )}
-          {displayedConditions && (
-            <div className="current-conditions-groups">
-              {currentMetricGroups.map((group, index) => (
-                <section
-                  className={`conditions-group conditions-group-${index + 1}`}
-                  key={group.title}
-                >
-                  <h3>{group.title}</h3>
-                  <div className="conditions-grid">
-                    {group.metrics.map((metric) => {
-                      const value = displayedConditions.values[metric.key]
-                      return (
-                        <article className="condition-card" key={metric.key}>
-                          <span className="condition-label">{metric.label}</span>
-                          <strong className="condition-value">
-                            {value == null ? '—' : Number(value).toLocaleString(
-                              'id-ID',
-                              { maximumFractionDigits: 1 },
-                            )}
-                            <span>{metric.unit}</span>
-                          </strong>
-                        </article>
-                      )
-                    })}
-                  </div>
-                </section>
-              ))}
-            </div>
-          )}
-          {!displayedConditions && !isLoadingConditions && !currentConditionsError && (
+        )}
+        {!displayedConditions && !isLoadingOptions && !isLoadingConditions &&
+          !currentConditionsError && !optionsError && (
             <p className="conditions-status">
               Pilih lokasi untuk melihat kondisi udara dan cuaca terkini.
             </p>
           )}
-          <p className="current-conditions-source">
-            Sumber: Open-Meteo API
+        <p className="current-conditions-source">Sumber: Open-Meteo API</p>
+      </aside>
+
+      <section className="prediction-module next-hour-prediction" aria-labelledby="next-hour-prediction-title">
+        <div className="prediction-module-heading">
+          <div>
+            <p className="current-conditions-eyebrow">PREDIKSI OTOMATIS</p>
+            <h2 id="next-hour-prediction-title">Prediksi kualitas udara</h2>
+            <p>Pilih kota dan polutan untuk melihat perkiraan satu jam ke depan.</p>
+          </div>
+        </div>
+
+        <div className="next-hour-prediction-fields">
+          <label className="prediction-field" htmlFor="next-hour-location">
+            <span>Kota</span>
+            <select
+              id="next-hour-location"
+              required
+              value={predictionLocation}
+              disabled={isLoadingOptions || Boolean(optionsError)}
+              onChange={(event) => setPredictionLocation(event.target.value)}
+            >
+              <option value="">Pilih kota</option>
+              {options?.locations?.map((city) => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="prediction-field" htmlFor="next-hour-pollutant">
+            <span>Jenis polutan</span>
+            <select
+              id="next-hour-pollutant"
+              required
+              value={predictionPollutant}
+              disabled={isLoadingOptions || Boolean(optionsError)}
+              onChange={(event) => setPredictionPollutant(event.target.value)}
+            >
+              <option value="">Pilih jenis polutan</option>
+              {options?.pollutants?.map((item) => (
+                <option key={item} value={item}>
+                  {formatPollutantLabel(item)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="next-hour-prediction-actions">
+          <button
+            className="prediction-button"
+            type="button"
+            aria-busy={isPredicting}
+            disabled={
+              isPredicting ||
+              isLoadingOptions ||
+              Boolean(optionsError) ||
+              !predictionLocation ||
+              !predictionPollutant ||
+              !selectedModel
+            }
+            onClick={handlePrediction}
+          >
+            {isPredicting && (
+              <span className="prediction-button-spinner" aria-hidden="true" />
+            )}
+            {isPredicting ? 'Memproses...' : 'Prediksi'}
+          </button>
+        </div>
+        {predictionError && (
+          <p className="prediction-message error" role="alert">
+            Prediksi gagal: {predictionError}
           </p>
-        </aside>
-      </div>
+        )}
+        {predictionResult && (
+          <div
+            className="next-hour-prediction-results"
+            ref={predictionResultsRef}
+            aria-live="polite"
+          >
+            <section className="next-hour-prediction-result previous">
+              <span>
+                Data {formatPollutantLabel(predictionResult.pollutant)} 1 jam
+                sebelumnya
+              </span>
+              <strong>
+                {Number(
+                  predictionResult.previous_hour_pollutant.value,
+                ).toLocaleString('id-ID', { maximumFractionDigits: 2 })}{' '}
+                µg/m³
+              </strong>
+              <p>
+                {formatUtcDateInWib(
+                  predictionResult.previous_hour_pollutant.time,
+                )}{' '}
+                ·{' '}
+                {formatUtcTimeInWib(
+                  predictionResult.previous_hour_pollutant.time,
+                )}{' '}
+                WIB
+              </p>
+            </section>
+            <div className="next-hour-prediction-flow" aria-label="Prediksi satu jam ke depan">
+              <span className="next-hour-prediction-flow-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M4 12h15m-6-6 6 6-6 6" />
+                </svg>
+              </span>
+              <span className="next-hour-prediction-flow-label">
+                Prediksi
+                <strong>+1 jam</strong>
+              </span>
+            </div>
+            <section className="next-hour-prediction-result forecast">
+              <span>
+                Prediksi {formatPollutantLabel(predictionResult.pollutant)}
+              </span>
+              <strong>
+                {Number(predictionResult.prediction).toLocaleString('id-ID', {
+                  maximumFractionDigits: 2,
+                })}{' '}
+                µg/m³
+              </strong>
+              {predictionCategory && (
+                <span className={`air-quality-category ${predictionCategory.key}`}>
+                  {predictionCategory.label}
+                </span>
+              )}
+              <p>
+                {formatUtcDateInWib(predictionResult.prediction_time)} ·{' '}
+                {formatUtcTimeInWib(predictionResult.prediction_time)} WIB
+              </p>
+            </section>
+          </div>
+        )}
+      </section>
     </section>
   )
 }

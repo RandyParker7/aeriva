@@ -36,16 +36,24 @@ export function getWibDateTimeParts(timestamp) {
 }
 
 export function formatUtcDateTimeInWib(timestamp) {
-  const { day, month, year, hour, minute } =
-    getIndonesiaDateTimeParts(timestamp)
-
-  return `${day}/${month}/${year} ${hour}:${minute}`
+  return new Intl.DateTimeFormat('id-ID', {
+    timeZone: INDONESIA_TIME_ZONE,
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(parseUtcTimestamp(timestamp))
 }
 
 export function formatUtcDateInWib(timestamp) {
-  const { day, month, year } = getIndonesiaDateTimeParts(timestamp)
-
-  return `${day}/${month}/${year}`
+  return new Intl.DateTimeFormat('id-ID', {
+    timeZone: INDONESIA_TIME_ZONE,
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(parseUtcTimestamp(timestamp))
 }
 
 export function formatUtcTimeInWib(timestamp) {

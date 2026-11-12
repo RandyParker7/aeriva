@@ -5,6 +5,10 @@ import {
   getWibDateTimeParts,
   wibDateTimeToUtcIso,
 } from '../utils/time'
+import {
+  formatPollutantLabel,
+  getPollutantUnit,
+} from '../utils/pollutants'
 import './EvaluationPage.css'
 
 const metricDefinitions = [
@@ -34,7 +38,7 @@ function getEvaluationInsights(result) {
     if (s1Mae === s2Mae) {
       insights.push({
         title: 'Kesalahan rata-rata',
-        description: `MAE kedua skenario sama, yaitu ${s1Mae.toFixed(3)} dalam satuan ${result.pollutant}.`,
+        description: `MAE kedua skenario sama, yaitu ${s1Mae.toFixed(3)} ${getPollutantUnit(result.pollutant)}.`,
       })
     } else {
       const betterScenario = s1Mae < s2Mae ? 'S1' : 'S2'
@@ -99,7 +103,7 @@ function getEvaluationInsights(result) {
       .join('; ')
     insights.push({
       title: 'Arah kesalahan prediksi',
-      description: `Rata-rata selisih prediksi dan aktual: ${biasDescription} dalam satuan ${result.pollutant}.`,
+      description: `Rata-rata selisih prediksi dan aktual: ${biasDescription} ${getPollutantUnit(result.pollutant)}.`,
     })
   }
 
@@ -162,7 +166,10 @@ function EvaluationChart({ points, pollutant }) {
     ? points[hoveredPoint.index]
     : null
   const hoveredSeries = series.find((item) => item.key === hoveredPoint?.key)
-  const tooltipWidth = 158
+  const hoveredValue = hoveredDataPoint && hoveredSeries
+    ? hoveredDataPoint[hoveredSeries.key]
+    : null
+  const tooltipWidth = 190
   const tooltipHeight = 38
   const tooltipX = hoveredPoint
     ? Math.min(
@@ -172,7 +179,7 @@ function EvaluationChart({ points, pollutant }) {
     : 0
   const tooltipY = hoveredPoint
     ? Math.min(
-        Math.max(y(hoveredDataPoint[hoveredPoint.key]) - tooltipHeight / 2, top),
+        Math.max(y(hoveredValue) - tooltipHeight / 2, top),
         top + chartHeight - tooltipHeight,
       )
     : top
@@ -207,14 +214,14 @@ function EvaluationChart({ points, pollutant }) {
           <h2 id="evaluation-chart-title">Perbandingan hasil</h2>
           <p>Data aktual dan prediksi per jam.</p>
         </div>
-        <span className="evaluation-chart-unit">{pollutant}</span>
+        <span className="evaluation-chart-unit">{formatPollutantLabel(pollutant)}</span>
       </div>
       <div className="evaluation-chart-scroll">
         <svg
           className="evaluation-chart"
           viewBox={`0 0 ${width} ${height}`}
           role="img"
-          aria-label={`Grafik garis data aktual, prediksi S1, dan prediksi S2 untuk ${pollutant}`}
+          aria-label={`Grafik garis data aktual, prediksi S1, dan prediksi S2 untuk ${formatPollutantLabel(pollutant)}`}
           onPointerMove={handlePointerMove}
           onPointerLeave={() => setHoveredPoint(null)}
         >
@@ -269,7 +276,7 @@ function EvaluationChart({ points, pollutant }) {
               <circle
                 className={hoveredSeries.className}
                 cx={x(hoveredPoint.index)}
-                cy={y(hoveredDataPoint[hoveredPoint.key])}
+                cy={y(hoveredValue)}
                 r="5"
               />
               <g transform={`translate(${tooltipX}, ${tooltipY})`}>
@@ -282,7 +289,8 @@ function EvaluationChart({ points, pollutant }) {
                   x="7"
                   y="28"
                 >
-                  {hoveredSeries.label} · {Number(hoveredDataPoint[hoveredPoint.key]).toFixed(1)}
+                  {hoveredSeries.label} · {Number(hoveredValue).toFixed(1)}{' '}
+                  {getPollutantUnit(pollutant)}
                 </text>
               </g>
             </g>
@@ -469,37 +477,27 @@ function EvaluationPage() {
             >
               <option value="">Pilih polutan</option>
               {options?.pollutants?.map((item) => (
-                <option key={item} value={item}>{item}</option>
+                <option key={item} value={item}>{formatPollutantLabel(item)}</option>
               ))}
             </select>
           </label>
           
 
-          <div className="evaluation-hour">
-            <div className="evaluation-hour-heading">
-              <label htmlFor="evaluation-hour">Jam akhir evaluasi</label>
-              <output htmlFor="evaluation-hour">
-                {String(evaluationHour).padStart(2, '0')}:00
-              </output>
-            </div>
-            <input
+          <label className="evaluation-field evaluation-hour" htmlFor="evaluation-hour">
+            <span>Jam akhir evaluasi</span>
+            <select
               id="evaluation-hour"
-              type="range"
-              min="0"
-              max={evaluationHourMax}
-              step="1"
+              required
               value={evaluationHour}
-              aria-valuetext={`${String(evaluationHour).padStart(2, '0')}:00`}
               onChange={(event) => setEvaluationHour(Number(event.target.value))}
-            />
-            <div className="evaluation-hour-ticks" aria-hidden="true">
-              <span>00:00</span>
-              <span>06:00</span>
-              <span>12:00</span>
-              <span>18:00</span>
-              <span>23:00</span>
-            </div>
-          </div>
+            >
+              {Array.from({ length: evaluationHourMax + 1 }, (_, hour) => (
+                <option key={hour} value={hour}>
+                  {String(hour).padStart(2, '0')}:00
+                </option>
+              ))}
+            </select>
+          </label>
 
           <div className="evaluation-actions">
             <button
@@ -549,7 +547,7 @@ function EvaluationPage() {
             <div>
               <h2>Hasil evaluasi</h2>
               <p>
-                {evaluationResult.location} · {evaluationResult.pollutant} ·{' '}
+                {evaluationResult.location} · {formatPollutantLabel(evaluationResult.pollutant)} ·{' '}
                 {formatUtcDateTimeInWib(evaluationResult.start_time)} sampai{' '}
                 {formatUtcDateTimeInWib(evaluationResult.end_time)} 
               </p>
